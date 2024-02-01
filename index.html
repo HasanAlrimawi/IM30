@@ -1,0 +1,20 @@
+<!DOCTYPE >
+<html>
+  <head>
+    <script type="module" src="controller.js"></script>
+  </head>
+  <body style="display: flex; flex-direction: column; gap: 20px">
+    <input type="button" id="connect" value="Connect Device" />
+    <form id="pay-form">
+      <div style="display: flex; gap: 10px">
+        <label for="amount">Amount</label>
+        <input type="number" name="amount" required id="amount" />
+      </div>
+      <div style="display: flex; gap: 10px">
+        <label for="pay">Press pay</label>
+        <input type="submit" name="pay" id="pay-button" value="Pay here" />
+      </div>
+      <!-- <input type="button" id="connect-device-button" value="Connect device" /> -->
+    </form>
+  </body>
+</html>
