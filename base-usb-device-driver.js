@@ -44,7 +44,7 @@ export class BaseDeviceUsbDriver {
       };
     }
     try {
-      await this.#device.selectConfiguration(this.configuration);
+      // await this.#device.selectConfiguration(this.configuration);
     } catch (error) {
       console.log(error);
       return {
