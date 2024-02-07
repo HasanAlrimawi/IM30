@@ -73,7 +73,7 @@ export class BaseDeviceUsbDriver {
     const encoder = new TextEncoder();
     const tranferOutResult = await this.#device.transferOut(
       this.writeEdnpoint,
-      encoder.encode(data)
+      encoder.encode(data).buffer
     );
     console.log(tranferOutResult);
   };

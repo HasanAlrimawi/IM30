@@ -3,7 +3,7 @@ import { trustCommerceAPIs } from "./trust-commerce.js";
 
 export class PaxUsbDriver extends BaseDeviceUsbDriver {
   constructor() {
-    super(0x1a86, 0x7523, 0, 0, 0x02, 0x82);
+    super(0x1a86, 0x7523, 0, 0, 0x02, 0x02);
     this.PAX_CONSTANTS = {
       STX: "[02]",
       ETX: "[03]",
@@ -89,6 +89,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
    */
   #intilialize = async () => {
     const intializeCommand = `${this.PAX_CONSTANTS.STX}A00[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
+    console.log(intializeCommand);
     await this.sendData(intializeCommand);
     const response = await this.#getPaxResponse();
     if (response.success) {
@@ -197,6 +198,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
 
   getInputAccount = async () => {
     const getInputCommand = `${this.PAX_CONSTANTS.STX}A30[1c]${this.PROTOCOL_VERSION}[1c]1[1c]1[1c]1[1c]1[1c][1c][200][1c][1c][1c][1c][1c]01[1c]01[1c][1c]${this.PAX_CONSTANTS.ETX}J`;
+    await this.sendData(getInputCommand);
     const response = await this.#getPaxResponse();
 
     if (response.success) {
