@@ -142,59 +142,59 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     }
   };
 
-  // pay = async (amount) => {
-  //   const initResult = await this.#intilialize();
-  //   if (initResult.failure) {
-  //     return { error: initResult.failure };
-  //   }
-  //   const getSigResult = await this.#getSignature();
-  //   if (getSigResult.failure) {
-  //     return { error: getSigResult.failure };
-  //   }
-  //   // [1c] means <FS> which is the separator of request/response fields
-  //   // [1f] means <US> which is the separator of the request amount information
-  //   const requestAmountInformation = `${amount}[1f]0[1f]0[1f]`;
-  //   const saleTransactionType = "01"; // To make a normal sale transaction
-  //   const doCreditCommand = `${this.PAX_CONSTANTS.STX}T00[1c]${this.PROTOCOL_VERSION}[1c]${saleTransactionType}[1c]${requestAmountInformation}[1c][1c]${this.ECR_REFERENCE_NUMBER}[1c][1c][1c][1c][1c][1c]${PAX_CONSTANTS.ETX}C`;
-  //   await this.sendData(doCreditCommand);
-  //   const response = await this.#getPaxResponse();
-  //   if (response.success) {
-  //     const [
-  //       command,
-  //       version,
-  //       responseCode,
-  //       responseMessage,
-  //       hostInformation,
-  //       transactionType,
-  //       amountInformation,
-  //       accountInformation,
-  //       traceInformation,
-  //       AVSInformation,
-  //       commercialInfomration,
-  //       eCommerce,
-  //       additionalInformation,
-  //     ] = response.responseData.split("[1c]");
-  //     console.log(`payment result is: ${responseCode}`);
-  //     console.log(
-  //       `Do credit command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
-  //     );
-  //     return {
-  //       responseCode,
-  //       responseMessage,
-  //       accountInformation,
-  //       amountInformation,
-  //       transactionType,
-  //       hostInformation,
-  //       traceInformation,
-  //       AVSInformation,
-  //       commercialInfomration,
-  //       eCommerce,
-  //       additionalInformation,
-  //     };
-  //   } else if (response.failure) {
-  //     console.log("Couldn't do credit");
-  //   }
-  // };
+  pay = async (amount) => {
+    const initResult = await this.#intilialize();
+    if (initResult.failure) {
+      return { error: initResult.failure };
+    }
+    const getSigResult = await this.#getSignature();
+    if (getSigResult.failure) {
+      return { error: getSigResult.failure };
+    }
+    // [1c] means <FS> which is the separator of request/response fields
+    // [1f] means <US> which is the separator of the request amount information
+    const requestAmountInformation = `${amount}[1f]0[1f]0[1f]`;
+    const saleTransactionType = "01"; // To make a normal sale transaction
+    const doCreditCommand = `${this.PAX_CONSTANTS.STX}T00[1c]${this.PROTOCOL_VERSION}[1c]${saleTransactionType}[1c]${requestAmountInformation}[1c][1c]${this.ECR_REFERENCE_NUMBER}[1c][1c][1c][1c][1c][1c]${PAX_CONSTANTS.ETX}C`;
+    await this.sendData(doCreditCommand);
+    const response = await this.#getPaxResponse();
+    if (response.success) {
+      const [
+        command,
+        version,
+        responseCode,
+        responseMessage,
+        hostInformation,
+        transactionType,
+        amountInformation,
+        accountInformation,
+        traceInformation,
+        AVSInformation,
+        commercialInfomration,
+        eCommerce,
+        additionalInformation,
+      ] = response.responseData.split("[1c]");
+      console.log(`payment result is: ${responseCode}`);
+      console.log(
+        `Do credit command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
+      );
+      return {
+        responseCode,
+        responseMessage,
+        accountInformation,
+        amountInformation,
+        transactionType,
+        hostInformation,
+        traceInformation,
+        AVSInformation,
+        commercialInfomration,
+        eCommerce,
+        additionalInformation,
+      };
+    } else if (response.failure) {
+      console.log("Couldn't do credit");
+    }
+  };
 
   getInputAccount = async () => {
     const getInputCommand = `${this.PAX_CONSTANTS.STX}A30[1c]${this.PROTOCOL_VERSION}[1c]1[1c]1[1c]1[1c]1[1c][1c][200][1c][1c][1c][1c][1c]01[1c]01[1c][1c]${this.PAX_CONSTANTS.ETX}J`;
@@ -231,7 +231,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     }
   };
 
-  pay = async (message) => {
+  showMessage = async (message) => {
     const showMessageCommand = `${this.PAX_CONSTANTS.STX}A10[1c]${this.PROTOCOL_VERSION}[1c]${message.body}[1c]${message.title}[1c][1c][1c][1c]5[1c][1c][1c][1c]${this.PAX_CONSTANTS.ETX}K`;
     console.log(`command sent: ${showMessageCommand}`);
     await this.sendData(showMessageCommand);

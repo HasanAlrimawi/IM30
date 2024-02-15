@@ -15,10 +15,7 @@ const pay = async (event) => {
   event.preventDefault();
   const amount = document.getElementById("amount").value;
   console.log(`User entered amount of: ${amount}`);
-  const paxPaymentResult = await paxInstance.pay({
-    title: "Payment amount",
-    body: amount,
-  });
+  const paxPaymentResult = await paxInstance.pay(amount);
   console.log(paxPaymentResult);
 };
 
