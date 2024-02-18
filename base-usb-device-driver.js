@@ -5,14 +5,14 @@ export class BaseDeviceUsbDriver {
     deviceInterface,
     deviceConfiguration,
     readEndpoint,
-    writeEdnpoint
+    writeEndpoint
   ) {
     this.vid = vid;
     this.pid = pid;
     this.interface = deviceInterface;
     this.configuration = deviceConfiguration;
     this.readEndpoint = readEndpoint;
-    this.writeEdnpoint = writeEdnpoint;
+    this.writeEndpoint = writeEndpoint;
   }
 
   pid;
@@ -20,7 +20,7 @@ export class BaseDeviceUsbDriver {
   interface;
   configuration;
   readEndpoint;
-  writeEdnpoint;
+  writeEndpoint;
   #device = undefined;
 
   load() {}
@@ -71,10 +71,14 @@ export class BaseDeviceUsbDriver {
 
   sendData = async (data) => {
     const encoder = new TextEncoder();
-    const tranferOutResult = await this.#device.transferOut(
-      this.writeEdnpoint,
-      encoder.encode(data).buffer
+    // const transferOutResult = await this.#device.transferOut(
+    //   this.writeEndpoint,
+    //   encoder.encode(data).buffer
+    // );
+    const transferOutResult = await this.#device.transferOut(
+      this.writeEndpoint,
+      data
     );
-    console.log(tranferOutResult);
+    console.log(transferOutResult);
   };
 }

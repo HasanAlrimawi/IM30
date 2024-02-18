@@ -11,7 +11,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
       NAK: "[15]",
       EOT: "[04]",
     };
-    this.PROTOCOL_VERSION = "1.26";
+    this.PROTOCOL_VERSION = "1.43";
     this.ECR_REFERENCE_NUMBER = "1";
     this.paymentGateway = trustCommerceAPIs;
   }
@@ -88,7 +88,10 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
    *     initialize the terminal for transactions.
    */
   #intilialize = async () => {
-    const intializeCommand = `${this.PAX_CONSTANTS.STX}A00[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
+    // const intializeCommand = `${this.PAX_CONSTANTS.STX}A00[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
+    const intializeCommand = Buffer.from([
+      0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x03, 0x46,
+    ]);
     console.log(intializeCommand);
     await this.sendData(intializeCommand);
     const response = await this.#getPaxResponse();
