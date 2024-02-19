@@ -5,14 +5,14 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   constructor() {
     super(0x1a86, 0x7523, 0, 0, 0x02, 0x02);
     this.PAX_CONSTANTS = {
-      STX: "[02]",
-      ETX: "[03]",
-      ACK: "[06]",
-      NAK: "[15]",
-      EOT: "[04]",
+      STX: 0x02,
+      ETX: 0x03,
+      ACK: 0x06,
+      NAK: 0x15,
+      EOT: 0x04,
     };
-    this.PROTOCOL_VERSION = "1.43";
-    this.ECR_REFERENCE_NUMBER = "1";
+    this.PROTOCOL_VERSION = new Uint8Array([0x31, 0x2e, 0x34, 0x33]);
+    this.ECR_REFERENCE_NUMBER = 0x01;
     this.paymentGateway = trustCommerceAPIs;
   }
   PAX_CONSTANTS;
@@ -84,22 +84,43 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   };
 
   /**
+   * Responsible for returning the command with the LRC byte appended to the
+   *     end of the command.
+   *
+   * @param {Uint8Array} command Represents the command to be sent for the PAX
+   *     device, it's expected to contatain the STX and ETX bytes.
+   */
+  #lrcAppender = (command) => {
+    const lrc = command
+      .subarray(1)
+      .reduce((acc, currentValue) => (acc ^= currentValue), 0);
+    const finalCommandArray = [...command, lrc];
+    return finalCommandArray;
+  };
+
+  /**
    * Used to direct the PAX terminal into making internal test/check and
    *     initialize the terminal for transactions.
    */
   #intilialize = async () => {
     // const intializeCommand = `${this.PAX_CONSTANTS.STX}A00[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
-    const commandArray = new Uint8Array([
-      0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x03, 0x46,
+    const initCommand = new Uint8Array([0x41, 0x30, 0x30]);
+    let requestArray = new Uint8Array([
+      this.PAX_CONSTANTS.STX,
+      ...initCommand,
+      0x1c,
+      ...this.PROTOCOL_VERSION,
+      this.PAX_CONSTANTS.ETX,
     ]);
-    const intializeCommand = commandArray.buffer;
-    // const buffer  = new Buffer();
-    // const intializeCommand = Buffer.from([
-    // 0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x03, 0x46,
-    // ]);
-    console.log(intializeCommand);
-    await this.sendData(intializeCommand);
+    requestArray = this.#lrcAppender(requestArray);
+    console.log(
+      `Command after appending the lrc byte to it: ${requestArray.toString(16)}`
+    );
+    const intializeRequest = requestArray.buffer;
+    console.log(intializeRequest);
+    await this.sendData(intializeRequest);
     const response = await this.#getPaxResponse();
+
     if (response.success) {
       const [
         command,
@@ -127,8 +148,22 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   };
 
   #getSignature = async () => {
-    const getSignatureCommand = `${this.PAX_CONSTANTS.STX}A08[1c]${this.PROTOCOL_VERSION}[1c]0[1c]90000${this.PAX_CONSTANTS.ETX}J`;
-    await this.sendData(getSignatureCommand);
+    // const getSignatureCommand = `${this.PAX_CONSTANTS.STX}A08[1c]${this.PROTOCOL_VERSION}[1c]0[1c]90000${this.PAX_CONSTANTS.ETX}J`;
+    const signatureCommand = new Uint8Array([0x41, 0x30, 0x38]);
+    let requestArray = new Uint8Array([
+      this.PAX_CONSTANTS.STX,
+      ...signatureCommand,
+      0x1c,
+      ...this.PROTOCOL_VERSION,
+      0x1c,
+      0x0,
+      0x1c,
+      0x15f90,
+      this.PAX_CONSTANTS.ETX,
+    ]);
+    requestArray = this.#lrcAppender(requestArray);
+    const getSignatureRequest = requestArray.buffer;
+    await this.sendData(getSignatureRequest);
     const response = await this.#getPaxResponse();
     if (response.success) {
       const [
@@ -152,10 +187,12 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
 
   pay = async (amount) => {
     const initResult = await this.#intilialize();
+
     if (initResult.failure) {
       return { error: initResult.failure };
     }
     const getSigResult = await this.#getSignature();
+
     if (getSigResult.failure) {
       return { error: getSigResult.failure };
     }
@@ -205,8 +242,39 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   };
 
   getInputAccount = async () => {
-    const getInputCommand = `${this.PAX_CONSTANTS.STX}A30[1c]${this.PROTOCOL_VERSION}[1c]1[1c]1[1c]1[1c]1[1c][1c][200][1c][1c][1c][1c][1c]01[1c]01[1c][1c]${this.PAX_CONSTANTS.ETX}J`;
-    await this.sendData(getInputCommand);
+    // const getInputCommand = `${this.PAX_CONSTANTS.STX}A30[1c]${this.PROTOCOL_VERSION}[1c]1[1c]1[1c]1[1c]1[1c][1c][200][1c][1c][1c][1c][1c]01[1c]01[1c][1c]${this.PAX_CONSTANTS.ETX}J`;
+    const getInputCommand = new Uint8Array([0x41, 0x33, 0x30]);
+    let requestArray = new Uint8Array([
+      this.PAX_CONSTANTS.STX,
+      ...getInputCommand,
+      0x1c,
+      ...this.PROTOCOL_VERSION,
+      0x1c,
+      0x1,
+      0x1c,
+      0x1,
+      0x1c,
+      0x1,
+      0x1c,
+      0x1,
+      0x1c,
+      0x1c,
+      0xc8,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x01,
+      0x1c,
+      0x01,
+      0x1c,
+      0x1c,
+      this.PAX_CONSTANTS.ETX,
+    ]);
+    requestArray = this.#lrcAppender(requestArray);
+    getInputRequest = requestArray.buffer;
+    await this.sendData(getInputRequest);
     const response = await this.#getPaxResponse();
 
     if (response.success) {
