@@ -84,8 +84,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     } else if (result == this.PAX_CONSTANTS.EOT) {
       console.log("Received EOT");
       return { compeleted: "completed", responseData: "end of transmission" };
-    }
-    else{
+    } else {
       console.log("Didn't receive ack nor nak nor eot on their own alone");
     }
   };
@@ -96,8 +95,11 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
    */
   #intilialize = async () => {
     // const intializeCommand = `${this.PAX_CONSTANTS.STX}A00[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
+    // const commandArray = new Uint8Array([
+    //   0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x03, 0x46,
+    // ]);
     const commandArray = new Uint8Array([
-      0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x03, 0x46,
+      0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33,
     ]);
     const intializeCommand = commandArray.buffer;
     // const buffer  = new Buffer();
