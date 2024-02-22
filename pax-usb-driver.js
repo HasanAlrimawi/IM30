@@ -33,11 +33,11 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   };
 
   #getPaxResponse = async () => {
-    setInterval(async () => {
-      let result = await this.listen();
-      console.log("Received before extraction: ");
-      console.log(result);
-    }, 400);
+    // setInterval(async () => {
+    //   let result = await this.listen();
+    //   console.log("Received before extraction: ");
+    //   console.log(result);
+    // }, 400);
     // let result = await this.listen();
     // console.log("Received before extraction: ");
     // console.log(result);

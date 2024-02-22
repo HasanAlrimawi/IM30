@@ -53,6 +53,11 @@ export class BaseDeviceUsbDriver {
     }
     try {
       await this.#device.claimInterface(this.interface);
+      setInterval(async () => {
+        let result = await this.listen();
+        console.log("Received before extraction: ");
+        console.log(result);
+      }, 400);
     } catch (error) {
       console.log(error);
       return {
