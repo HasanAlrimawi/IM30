@@ -93,13 +93,10 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
    * Used to direct the PAX terminal into making internal test/check and
    *     initialize the terminal for transactions.
    */
-  #intilialize = async () => {
+  pay = async () => {
     // const intializeCommand = `${this.PAX_CONSTANTS.STX}A00[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
-    // const commandArray = new Uint8Array([
-    //   0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x03, 0x46,
-    // ]);
     const commandArray = new Uint8Array([
-      0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33,
+      0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x03, 0x46,
     ]);
     const intializeCommand = commandArray.buffer;
     // const buffer  = new Buffer();
@@ -159,8 +156,8 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     }
   };
 
-  pay = async (amount) => {
-    const initResult = await this.#intilialize();
+  zzzz = async (amount) => {
+    const initResult = await this.intilialize();
     if (initResult.failure) {
       return { error: initResult.failure };
     }
