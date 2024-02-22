@@ -33,65 +33,61 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   };
 
   #getPaxResponse = async () => {
-    let result = undefined;
-    for (const i = 0; i < 3; i++) {
-      setTimeout(async () => {
-        result = await this.listen();
-        console.log(
-          `Received before extraction (iteration ${i + 1}: ${result}\n\n`
+    let result = await this.listen();
+    console.log("Received before extraction: ");
+    console.log(result);
+    let responseCompleteData = "";
+    /**
+     * Takes the response as is from device, then returns the important
+     *     data within it after removing the prefix and suffic included in
+     *     every pax response.
+     *
+     * @param {string} response Represents the response from PAX device
+     * @returns {string} Represents the important response data without the
+     *     starting and ending representations of the response
+     */
+    const extractResponseData = (response) => {
+      let resultPrefixRemoved = "";
+
+      response.includes(`${this.PAX_CONSTANTS.STX}1[1c]`)
+        ? (resultPrefixRemoved = response.split(
+            `${this.PAX_CONSTANTS.STX}1[1c]`
+          )[1])
+        : (resultPrefixRemoved = response.split(
+            `${this.PAX_CONSTANTS.STX}0[1c]`
+          )[1]);
+      const resultSuffixPrefixRemoved = resultPrefixRemoved.split(
+        `${this.PAX_CONSTANTS.ETX}`
+      )[0];
+      return resultSuffixPrefixRemoved;
+    };
+
+    if (result == this.PAX_CONSTANTS.ACK) {
+      console.log("I received ACK from PAX");
+      result = await this.listen();
+
+      while (result.startsWith(`${this.PAX_CONSTANTS.STX}1`)) {
+        responseCompleteData = responseCompleteData.concat(
+          extractResponseData(result)
         );
-      }, (i + 1) * 100);
+        await this.sendData(this.PAX_CONSTANTS.ACK);
+        result = await this.listen();
+      }
+      responseCompleteData = responseCompleteData.concat(
+        extractResponseData(result)
+      );
+      this.sendData(this.PAX_CONSTANTS.ACK);
+      return { success: "success", responseData: message };
+    } else if (result == this.PAX_CONSTANTS.NAK) {
+      console.log("Received NAK");
+      return { failure: "failure", error: "request not acknowledged" };
+    } else if (result == this.PAX_CONSTANTS.EOT) {
+      console.log("Received EOT");
+      return { compeleted: "completed", responseData: "end of transmission" };
     }
-    // setTimeout(async () => {
-    //   result = await this.listen();
-    //   console.log(`Received before extraction: ${result}`);
-    //   let responseCompleteData = "";
-    //   /**
-    //    * Takes the response as is from device, then returns the important
-    //    *     data within it after removing the prefix and suffic included in
-    //    *     every pax response.
-    //    *
-    //    * @param {string} response Represents the response from PAX device
-    //    * @returns {string} Represents the important response data without the
-    //    *     starting and ending representations of the response
-    //    */
-    //   const extractResponseData = (response) => {
-    //     let resultPrefixRemoved = "";
-
-    //     response.includes(`${this.PAX_CONSTANTS.STX}1[1c]`)
-    //       ? (resultPrefixRemoved = response.split(
-    //           `${this.PAX_CONSTANTS.STX}1[1c]`
-    //         )[1])
-    //       : (resultPrefixRemoved = response.split(
-    //           `${this.PAX_CONSTANTS.STX}0[1c]`
-    //         )[1]);
-    //     const resultSuffixPrefixRemoved = resultPrefixRemoved.split(
-    //       `${this.PAX_CONSTANTS.ETX}`
-    //     )[0];
-    //     return resultSuffixPrefixRemoved;
-    //   };
-
-    //   if (result == this.PAX_CONSTANTS.ACK) {
-    //     result = await this.listen();
-
-    //     while (result.startsWith(`${this.PAX_CONSTANTS.STX}1`)) {
-    //       responseCompleteData = responseCompleteData.concat(
-    //         extractResponseData(result)
-    //       );
-    //       await this.sendData(this.PAX_CONSTANTS.ACK);
-    //       result = await this.listen();
-    //     }
-    //     responseCompleteData = responseCompleteData.concat(
-    //       extractResponseData(result)
-    //     );
-    //     this.sendData(this.PAX_CONSTANTS.ACK);
-    //     return { success: "success", responseData: message };
-    //   } else if (result == this.PAX_CONSTANTS.NAK) {
-    //     return { failure: "failure", error: "request not acknowledged" };
-    //   } else if (result == this.PAX_CONSTANTS.EOT) {
-    //     return { compeleted: "completed", responseData: "end of transmission" };
-    //   }
-    // }, 3000);
+    else{
+      console.log("Didn't receive ack nor nak nor eot on their own alone");
+    }
   };
 
   /**
@@ -111,7 +107,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     console.log(intializeCommand);
     await this.sendData(intializeCommand);
     const response = await this.#getPaxResponse();
-    if (response.success) {
+    if (response?.success) {
       const [
         command,
         version,
@@ -132,7 +128,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
       console.log(
         `Initialize command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
-    } else if (response.failure) {
+    } else if (response?.failure) {
       console.log("try again, miscommunication occured");
     }
   };
