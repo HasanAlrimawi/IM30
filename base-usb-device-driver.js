@@ -62,7 +62,7 @@ export class BaseDeviceUsbDriver {
   };
 
   listen = async () => {
-    let result = await this.#device.transferIn(this.readEndpoint, 32);
+    let result = await this.#device.transferIn(this.readEndpoint, 64);
     console.log(result);
     const decoder = new TextDecoder();
     let message = decoder.decode(result.data);
