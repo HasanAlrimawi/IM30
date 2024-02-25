@@ -31,6 +31,10 @@ const showMessage = async () => {
   await paxInstance.showMessage();
 };
 
+const getInputAccount = async () => {
+  await paxInstance.getInputAccount();
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("connect").addEventListener("click", connect);
   document.getElementById("pay-form").addEventListener("submit", pay);
@@ -41,4 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("show-message-button")
     .addEventListener("click", showMessage);
+  document
+    .getElementById("get-input-account-button")
+    .addEventListener("click", getInputAccount);
 });

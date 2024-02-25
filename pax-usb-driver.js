@@ -217,7 +217,12 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   };
 
   getInputAccount = async () => {
-    const getInputCommand = `${this.PAX_CONSTANTS.STX}A30[1c]${this.PROTOCOL_VERSION}[1c]1[1c]1[1c]1[1c]1[1c][1c][200][1c][1c][1c][1c][1c]01[1c]01[1c][1c]${this.PAX_CONSTANTS.ETX}J`;
+    // const getInputCommand = `${this.PAX_CONSTANTS.STX}A30[1c]${this.PROTOCOL_VERSION}[1c]1[1c]1[1c]1[1c]1[1c][1c][200][1c][1c][1c][1c][1c]01[1c]01[1c][1c]${this.PAX_CONSTANTS.ETX}J`;
+    const getInputCommand = new Uint8Array([
+      0x02, 0x41, 0x33, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x1c, 0x31, 0x1c,
+      0x31, 0x1c, 0x31, 0x1c, 0x31, 0x1c, 0x1c, 0x32, 0x30, 0x30, 0x1c, 0x1c,
+      0x1c, 0x1c, 0x1c, 0x30, 0x31, 0x1c, 0x30, 0x31, 0x1c, 0x1c, 0x03, 0x77,
+    ]);
     await this.sendData(getInputCommand);
     const response = await this.getPaxResponse();
 
@@ -261,9 +266,9 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     // const showMessageCommand = `${this.PAX_CONSTANTS.STX}A10[1c]${this.PROTOCOL_VERSION}[1c]${message.body}[1c]${message.title}[1c][1c][1c][1c]5[1c][1c][1c][1c]${this.PAX_CONSTANTS.ETX}K`;
     const showMessageCommand = new Uint8Array([
       0x02,
-      0x041,
-      0x031,
-      0x030,
+      0x41,
+      0x31,
+      0x30,
       0x1c,
       0x31,
       0x2e,
@@ -277,12 +282,13 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
       0x1c,
       0x1c,
       0x1c,
-      0x05,
+      0x35,
       0x1c,
       0x1c,
       0x1c,
       0x1c,
       0x03,
+      0x34,
     ]);
     console.log(`command sent: ${showMessageCommand}`);
     await this.sendData(showMessageCommand);
