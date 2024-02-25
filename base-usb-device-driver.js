@@ -63,10 +63,18 @@ export class BaseDeviceUsbDriver {
 
   listen = async () => {
     let result = await this.#device.transferIn(this.readEndpoint, 32);
+    console.log("response before decoding:");
     console.log(result);
     const decoder = new TextDecoder();
     let message = decoder.decode(result.data);
+    console.log("response after decoding:");
     console.log(message);
+    for (let i = 0; i < message.length; i++) {
+      const charAscii = message.charCodeAt(i);
+      if (charAscii === 0x04) {
+        console.log("EOT found at ${i}");
+      }
+    }
     return message;
   };
 
