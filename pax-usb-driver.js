@@ -32,7 +32,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     }
   };
 
-  #getPaxResponse = async () => {
+  getPaxResponse = async () => {
     let result = await this.listen();
     console.log("Received before extraction: ");
     console.log(result);
@@ -84,10 +84,15 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     } else if (result == this.PAX_CONSTANTS.EOT) {
       console.log("Received EOT");
       return { compeleted: "completed", responseData: "end of transmission" };
-    }
-    else{
+    } else {
       console.log("Didn't receive ack nor nak nor eot on their own alone");
     }
+  };
+
+  sendAcknowledge = async () => {
+    const ack = 0x06;
+    await this.sendData(ack);
+    console.log("Sent ack to PAX, now try to listen to PAX");
   };
 
   /**
@@ -106,7 +111,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     // ]);
     console.log(intializeCommand);
     await this.sendData(intializeCommand);
-    const response = await this.#getPaxResponse();
+    const response = await this.getPaxResponse();
     if (response?.success) {
       const [
         command,
@@ -136,7 +141,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   #getSignature = async () => {
     const getSignatureCommand = `${this.PAX_CONSTANTS.STX}A08[1c]${this.PROTOCOL_VERSION}[1c]0[1c]90000${this.PAX_CONSTANTS.ETX}J`;
     await this.sendData(getSignatureCommand);
-    const response = await this.#getPaxResponse();
+    const response = await this.getPaxResponse();
     if (response.success) {
       const [
         command,
@@ -172,7 +177,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     const saleTransactionType = "01"; // To make a normal sale transaction
     const doCreditCommand = `${this.PAX_CONSTANTS.STX}T00[1c]${this.PROTOCOL_VERSION}[1c]${saleTransactionType}[1c]${requestAmountInformation}[1c][1c]${this.ECR_REFERENCE_NUMBER}[1c][1c][1c][1c][1c][1c]${PAX_CONSTANTS.ETX}C`;
     await this.sendData(doCreditCommand);
-    const response = await this.#getPaxResponse();
+    const response = await this.getPaxResponse();
     if (response.success) {
       const [
         command,
@@ -214,7 +219,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   getInputAccount = async () => {
     const getInputCommand = `${this.PAX_CONSTANTS.STX}A30[1c]${this.PROTOCOL_VERSION}[1c]1[1c]1[1c]1[1c]1[1c][1c][200][1c][1c][1c][1c][1c]01[1c]01[1c][1c]${this.PAX_CONSTANTS.ETX}J`;
     await this.sendData(getInputCommand);
-    const response = await this.#getPaxResponse();
+    const response = await this.getPaxResponse();
 
     if (response.success) {
       const [
@@ -246,11 +251,42 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     }
   };
 
-  showMessage = async (message) => {
-    const showMessageCommand = `${this.PAX_CONSTANTS.STX}A10[1c]${this.PROTOCOL_VERSION}[1c]${message.body}[1c]${message.title}[1c][1c][1c][1c]5[1c][1c][1c][1c]${this.PAX_CONSTANTS.ETX}K`;
+  // showMessage = async (message) => {
+  showMessage = async () => {
+    message = new Uint8Array([
+      0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x49, 0x20, 0x61, 0x6d, 0x20, 0x61,
+      0x20, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+    ]);
+    title = new Uint8Array([0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65]);
+    // const showMessageCommand = `${this.PAX_CONSTANTS.STX}A10[1c]${this.PROTOCOL_VERSION}[1c]${message.body}[1c]${message.title}[1c][1c][1c][1c]5[1c][1c][1c][1c]${this.PAX_CONSTANTS.ETX}K`;
+    const showMessageCommand = new Uint8Array([
+      0x02,
+      0x041,
+      0x031,
+      0x030,
+      0x1c,
+      0x31,
+      0x2e,
+      0x34,
+      0x33,
+      0x1c,
+      ...message,
+      0x1c,
+      ...title,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x05,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x03,
+    ]);
     console.log(`command sent: ${showMessageCommand}`);
     await this.sendData(showMessageCommand);
-    const response = await this.#getPaxResponse();
+    const response = await this.getPaxResponse();
     console.log(`response: ${response}`);
     if (response.success) {
       const [command, version, responseCode, responseMessage] =
@@ -266,7 +302,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   clearMessage = async () => {
     const clearMessageCommand = `${this.PAX_CONSTANTS.STX}A12[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
     await this.sendData(clearMessageCommand);
-    const response = await this.#getPaxResponse();
+    const response = await this.getPaxResponse();
     if (response.success) {
       const [command, version, responseCode, responseMessage] =
         response.responseData.split("[1c]");
