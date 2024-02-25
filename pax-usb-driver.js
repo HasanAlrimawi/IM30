@@ -106,10 +106,10 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
    *     initialize the terminal for transactions.
    */
   // #intilialize = async () => {
-    pay = async (amount) => {
+  pay = async (amount) => {
     // const intializeCommand = `${this.PAX_CONSTANTS.STX}A00[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
     const commandArray = new Uint8Array([
-      0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x03, 0x46,
+      0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e,  0x32, 0x36, 0x03, 0x46,
     ]);
     const intializeCommand = commandArray.buffer;
     // const buffer  = new Buffer();
@@ -172,7 +172,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   xxx = async (amount) => {
     // const initResult = await this.#intilialize();
     // if (initResult.failure) {
-      // return { error: initResult.failure };
+    // return { error: initResult.failure };
     // }
     const getSigResult = await this.#getSignature();
     if (getSigResult.failure) {
@@ -226,9 +226,10 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   getInputAccount = async () => {
     // const getInputCommand = `${this.PAX_CONSTANTS.STX}A30[1c]${this.PROTOCOL_VERSION}[1c]1[1c]1[1c]1[1c]1[1c][1c][200][1c][1c][1c][1c][1c]01[1c]01[1c][1c]${this.PAX_CONSTANTS.ETX}J`;
     const getInputCommand = new Uint8Array([
-      0x02, 0x41, 0x33, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x1c, 0x31, 0x1c,
-      0x31, 0x1c, 0x31, 0x1c, 0x31, 0x1c, 0x1c, 0x32, 0x30, 0x30, 0x1c, 0x1c,
-      0x1c, 0x1c, 0x1c, 0x30, 0x31, 0x1c, 0x30, 0x31, 0x1c, 0x1c, 0x03, 0x77,
+      0x02, 0x41, 0x33, 0x30, 0x1c, 0x31, 0x2e, 0x32, 0x36, 0x1c, 0x31, 0x1c,
+      0x31, 0x1c, 0x31, 0x1c, 0x31, 0x1c, 0x1c, 0x32, 0x30, 0x30, 0x1c, 0x00,
+      0x1c, 0x1c, 0x1c, 0x1c, 0x30, 0x31, 0x1c, 0x30, 0x31, 0x1c, 0x1c, 0x01,
+      0x03, 0x77,
     ]);
     await this.sendData(getInputCommand);
     const response = await this.getPaxResponse();
@@ -279,8 +280,8 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
       0x1c,
       0x31,
       0x2e,
-      0x34,
-      0x33,
+      0x32,
+      0x36,
       0x1c,
       ...message,
       0x1c,
