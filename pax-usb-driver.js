@@ -96,7 +96,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
   };
 
   sendAcknowledge = async () => {
-    const ack = 0x06;
+    const ack = new Uint8Array([0x06]);
     await this.sendData(ack);
     console.log("Sent ack to PAX, now try to listen to PAX");
   };
@@ -105,7 +105,8 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
    * Used to direct the PAX terminal into making internal test/check and
    *     initialize the terminal for transactions.
    */
-  #intilialize = async () => {
+  // #intilialize = async () => {
+    pay = async (amount) => {
     // const intializeCommand = `${this.PAX_CONSTANTS.STX}A00[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
     const commandArray = new Uint8Array([
       0x02, 0x41, 0x30, 0x30, 0x1c, 0x31, 0x2e, 0x34, 0x33, 0x03, 0x46,
@@ -168,11 +169,11 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
     }
   };
 
-  pay = async (amount) => {
-    const initResult = await this.#intilialize();
-    if (initResult.failure) {
-      return { error: initResult.failure };
-    }
+  xxx = async (amount) => {
+    // const initResult = await this.#intilialize();
+    // if (initResult.failure) {
+      // return { error: initResult.failure };
+    // }
     const getSigResult = await this.#getSignature();
     if (getSigResult.failure) {
       return { error: getSigResult.failure };
@@ -264,11 +265,11 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
 
   // showMessage = async (message) => {
   showMessage = async () => {
-    message = new Uint8Array([
+    const message = new Uint8Array([
       0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x49, 0x20, 0x61, 0x6d, 0x20, 0x61,
       0x20, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
     ]);
-    title = new Uint8Array([0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65]);
+    const title = new Uint8Array([0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65]);
     // const showMessageCommand = `${this.PAX_CONSTANTS.STX}A10[1c]${this.PROTOCOL_VERSION}[1c]${message.body}[1c]${message.title}[1c][1c][1c][1c]5[1c][1c][1c][1c]${this.PAX_CONSTANTS.ETX}K`;
     const showMessageCommand = new Uint8Array([
       0x02,
