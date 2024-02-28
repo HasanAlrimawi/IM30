@@ -4,7 +4,7 @@ import { PaxUsbDriver } from "./pax-usb-driver.js";
 const paxInstance = new PaxSerialDriver();
 const connect = async () => {
   try {
-    const device = await navigator.usb.requestDevice({ filters: [] });
+    const device = await navigator.serial.requestPort({ filters: [] });
     paxInstance.setDeviceUnderUse(device);
     paxInstance.connectDevice();
   } catch (error) {
