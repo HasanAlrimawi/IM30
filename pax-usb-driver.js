@@ -248,7 +248,7 @@ export class PaxUsbDriver extends BaseDeviceUsbDriver {
         QRCode,
         KSN,
         additionalInformation,
-      ] = response.responseData.split("[1c]");
+      ] = response.responseData.split(0x1c);
       console.log(
         `Get input account command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
