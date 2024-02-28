@@ -40,27 +40,33 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
    */
   read = async () => {
     const reader = this.device.readable.getReader();
-    let value = undefined;
+    let all = [];
 
     while (true) {
       try {
-        const { newValue, done } = await reader.read();
+        const { value, done } = await reader.read();
 
+        // console.log(value);
+        const array = Array.from(value);
+        console.log(array);
         if (done) {
           reader.releaseLock();
-          return { success: "Success at reading", value: value };
+          let res = Uint8Array.from(all);
+
+          return { success: "Success at reading", value: res };
         }
 
-        if (newValue) {
+        if (value) {
           console.log("new value read within read function");
-          console.log(newValue);
-          value.push(newValue);
+          console.log(value);
+          all.push(...array);
 
-          if (value.includes(this.PAX_CONSTANTS.EOT)) {
-            const indexBeforeEOT = value.indexOf(this.PAX_CONSTANTS.EOT);
-            value = value.slice(0, indexBeforeEOT);
+          if (all.includes(this.PAX_CONSTANTS.ETX)) {
+            const indexBeforeEOT = all.indexOf(this.PAX_CONSTANTS.ETX);
+            all = all.slice(0, indexBeforeEOT);
             reader.releaseLock();
-            return { success: "Success at reading", value: value };
+            let res = Uint8Array.from(all);
+            return { success: "Success at reading", value: res };
           }
         }
       } catch (error) {
@@ -92,8 +98,10 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         );
         return extractedReponseData;
       };
-      const extractedReponseData = extractResponseData();
-      console.log(extractedReponseData);
+      // const extractedReponseData = extractResponseData();
+      const decoder = new TextDecoder()
+      console.log("all", readResult.value)
+      console.log(decoder.decode(readResult.value));
       return {
         success: "Response read and extracted successfully",
         response: extractedReponseData,
