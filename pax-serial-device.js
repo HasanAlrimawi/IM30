@@ -118,7 +118,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     const lrc = command
       .subarray(1)
       .reduce((acc, currentValue) => (acc ^= currentValue), 0);
-    const finalCommandArray = [...command, lrc];
+    const finalCommandArray = new Uint8Array([...command, lrc])
     return finalCommandArray;
   };
 
