@@ -1,6 +1,7 @@
+import { PaxSerialDriver } from "./pax-serial-device.js";
 import { PaxUsbDriver } from "./pax-usb-driver.js";
 
-const paxInstance = new PaxUsbDriver();
+const paxInstance = new PaxSerialDriver();
 const connect = async () => {
   try {
     const device = await navigator.usb.requestDevice({ filters: [] });
@@ -23,9 +24,9 @@ const listen = async () => {
   await paxInstance.getPaxResponse();
 };
 
-const acknowledge = async () => {
-  await paxInstance.sendAcknowledge();
-};
+// const acknowledge = async () => {
+//   await paxInstance.sendAcknowledge();
+// };
 
 const showMessage = async () => {
   await paxInstance.showMessage();
@@ -39,9 +40,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("connect").addEventListener("click", connect);
   document.getElementById("pay-form").addEventListener("submit", pay);
   document.getElementById("listen-button").addEventListener("click", listen);
-  document
-    .getElementById("acknowledge-button")
-    .addEventListener("click", acknowledge);
+  // document
+  //   .getElementById("acknowledge-button")
+  //   .addEventListener("click", acknowledge);
   document
     .getElementById("show-message-button")
     .addEventListener("click", showMessage);

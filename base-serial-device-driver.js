@@ -1,0 +1,89 @@
+export class BaseDeviceSerialDriver {
+  constructor(baudRate) {
+    this.baudRate = baudRate;
+  }
+
+  baudRate;
+  device = undefined;
+
+  load() {}
+  pay() {}
+
+  setDeviceUnderUse = (device) => {
+    this.device = device;
+  };
+
+  getDeviceUnderUse = () => {
+    return this.device;
+  };
+
+  /**
+   * @typedef {Object} FunctionalitySuccess
+   * @property {string} success Success message conveys the success of the
+   *     functionality
+   */
+
+  /**
+   * @typedef {Object} FunctionalityFailure
+   * @property {string} error Error message that conveys failure
+   */
+
+  /**
+   * @typedef {Object} ReadingSuccess
+   * @property {string} success Success message to convey success
+   * @property {Uint8Array} value The value that has been retrieved from
+   *     serial port
+   */
+
+  /**
+   * Opens/connects the serial port selected.
+   *
+   * @returns {FunctionalitySuccess | FunctionalityFailure}
+   */
+  connectDevice = async () => {
+    try {
+      await this.device.open({ baudRate: this.baudRate });
+      return {
+        success: `Device was opened successfully`,
+      };
+    } catch (error) {
+      console.log(error);
+      return {
+        error: `Couldn't open device ${error}`,
+      };
+    }
+  };
+
+  /**
+   * Keeps on reading the serial port until there's nothing to read, or some
+   *     fatal error occured.
+   *
+   * @returns {ReadingSuccess | FunctionalityFailure}
+   */
+  read = async () => {
+    const reader = this.device.readable.getReader();
+    let value = undefined;
+    while (true) {
+      let done = undefined;
+      const newValue = undefined;
+      try {
+        ({ newValue, done } = await reader.read());
+        if (done) {
+          reader.releaseLock();
+          return { success: "Success at reading", value: value };
+        }
+        if (newValue) {
+          value.push(newValue);
+        }
+      } catch (error) {
+        return { error: error };
+      }
+    }
+  };
+
+  write = async (data) => {
+    const writer = this.device.writable.getWriter();
+    await writer.write(data);
+    writer.releaseLock();
+  };
+}

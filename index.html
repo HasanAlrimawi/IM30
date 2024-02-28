@@ -3,7 +3,14 @@
   <head>
     <script type="module" src="controller.js"></script>
   </head>
-  <body style="display: flex; flex-direction: column; gap: 20px">
+  <body
+    style="
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background-color: dimgrey;
+    "
+  >
     <input type="button" id="connect" value="Connect Device" />
     <form id="pay-form">
       <div style="display: flex; gap: 10px">
@@ -17,7 +24,12 @@
       <input type="button" id="acknowledge-button" value="Acknowledge" />
       <input type="button" id="listen-button" value="Listen" />
       <input type="button" id="show-message-button" value="Show message" />
-      <input type="button" id="get-input-account-button" value="Get Input Account" title="Collect customer card details">
+      <input
+        type="button"
+        id="get-input-account-button"
+        value="Get Input Account"
+        title="Collect customer card details"
+      />
     </form>
   </body>
 </html>
