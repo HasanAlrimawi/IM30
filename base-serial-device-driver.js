@@ -62,18 +62,20 @@ export class BaseDeviceSerialDriver {
    */
   read = async () => {
     const reader = this.device.readable.getReader();
-    let value = undefined;
+    let completeResponse = [];
     while (true) {
-      let done = undefined;
-      const newValue = undefined;
       try {
-        ({ newValue, done } = await reader.read());
+        const { value, done } = await reader.read();
+        const arrayValue = Array.from(value);
         if (done) {
           reader.releaseLock();
-          return { success: "Success at reading", value: value };
+          return {
+            success: "Success at reading",
+            value: Uint8Array(completeResponse),
+          };
         }
-        if (newValue) {
-          value.push(newValue);
+        if (value) {
+          completeResponse.push(...arrayValue);
         }
       } catch (error) {
         return { error: error };

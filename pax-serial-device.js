@@ -40,33 +40,42 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
    */
   read = async () => {
     const reader = this.device.readable.getReader();
-    let all = [];
+    let completeResponse = [];
+    const decoder = new TextDecoder();
 
     while (true) {
       try {
         const { value, done } = await reader.read();
+        const valueAsArray = Array.from(value);
 
-        // console.log(value);
-        const array = Array.from(value);
-        console.log(array);
         if (done) {
           reader.releaseLock();
-          let res = Uint8Array.from(all);
-
-          return { success: "Success at reading", value: res };
+          return {
+            success: "Success at reading",
+            value: decoder.decode(Uint8Array.from(completeResponse)),
+          };
         }
 
         if (value) {
           console.log("new value read within read function");
           console.log(value);
-          all.push(...array);
+          completeResponse.push(...valueAsArray);
 
-          if (all.includes(this.PAX_CONSTANTS.ETX)) {
-            const indexBeforeEOT = all.indexOf(this.PAX_CONSTANTS.ETX);
-            all = all.slice(0, indexBeforeEOT);
+          if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
+            const indexBeforeETX = completeResponse.indexOf(
+              this.PAX_CONSTANTS.ETX
+            );
+            const STXIndex = completeResponse.indexOf(this.PAX_CONSTANTS.STX);
+            // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
+            completeResponse = completeResponse.slice(
+              STXIndex + 3,
+              indexBeforeETX
+            );
             reader.releaseLock();
-            let res = Uint8Array.from(all);
-            return { success: "Success at reading", value: res };
+            return {
+              success: "Success at reading",
+              value: decoder.decode(Uint8Array.from(completeResponse)),
+            };
           }
         }
       } catch (error) {
@@ -76,51 +85,49 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
   };
 
   /**
+   * Converts the number or string passed to it to its corresponding
+   *     Uint8Array representation.
    *
-   * @returns { {success: string, response: Object} | {error: string} }
+   * @param {number | string} data The data to be converted to Uint8Array
+   *     representation.
+   * @returns {Uint8Array} Data entered but in its Uint8Array representation
    */
-  getPaxResponse = async () => {
-    let readResult = await this.read();
-    console.log(readResult);
-
-    if (readResult?.success) {
-      const extractResponseData = () => {
-        /** Represents the index after [STX][status][1c] */
-        const afterResponsePrefixIndex =
-          readResult.value.indexOf(this.PAX_CONSTANTS.STX) + 3;
-        /** Represents the index before [ETX][LRC] */
-        const beforeResponseSuffixIndex = readResult.value.indexOf(
-          this.PAX_CONSTANTS.ETX
-        );
-        const extractedReponseData = readResult.value.slice(
-          afterResponsePrefixIndex,
-          beforeResponseSuffixIndex
-        );
-        return extractedReponseData;
-      };
-      // const extractedReponseData = extractResponseData();
-      const decoder = new TextDecoder()
-      console.log("all", readResult.value)
-      console.log(decoder.decode(readResult.value));
-      return {
-        success: "Response read and extracted successfully",
-        response: extractedReponseData,
-      };
-    } else if (readResult?.error) {
-      return {
-        error: readResult?.error,
-      };
+  #convertToUint8Array = (data) => {
+    const encoder = new TextEncoder();
+    if (typeof data === "number") {
+      console.log("num");
+      data = data.toString();
     }
+    if (typeof data === "string") {
+      console.log("str");
+      data = encoder.encode(data);
+    }
+    return data;
+  };
+
+  /**
+   * Responsible for returning the command with the LRC byte appended to the
+   *     end of the command.
+   *
+   * @param {Uint8Array} command Represents the command to be sent for the PAX
+   *     device, it's expected to contain the STX and ETX bytes
+   *
+   * @returns {Uint8Array} The command with the LRC byte appended to it
+   */
+  #lrcAppender = (command) => {
+    const lrc = command
+      .subarray(1)
+      .reduce((acc, currentValue) => (acc ^= currentValue), 0);
+    const finalCommandArray = [...command, lrc];
+    return finalCommandArray;
   };
 
   /**
    * Used to direct the PAX terminal into making internal test/check and
    *     initialize the terminal for transactions.
    */
-  // #intilialize = async () => {
-  pay = async (amount) => {
-    // const intializeCommand = `${this.PAX_CONSTANTS.STX}A00[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
-    const commandArray = new Uint8Array([
+  initialize = async () => {
+    let commandArray = new Uint8Array([
       this.PAX_CONSTANTS.STX,
       0x41,
       0x30,
@@ -128,11 +135,10 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1c,
       ...this.PROTOCOL_VERSION,
       this.PAX_CONSTANTS.ETX,
-      0x46,
     ]);
-    console.log(commandArray);
+    commandArray = this.#lrcAppender(commandArray);
     await this.write(commandArray);
-    const response = await this.getPaxResponse();
+    const response = await this.read();
     console.log(response);
     if (response?.success) {
       const [
@@ -141,31 +147,51 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         responseCode,
         responseMessage,
         SN,
-        modelNumber,
+        modelName,
         OSVersion,
         MACAdress,
-        numberOfLines,
+        numberOfLinesPerScreen,
         numberOfCharsPerLine,
         additionalInformation,
         touchScreen,
         HWConfigBitmap,
         appActivated,
         licenseExpiry,
-      ] = response.responseData.split(0x1c);
+      ] = response.value.split(String.fromCharCode(0x1c));
       console.log(
         `Initialize command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
     } else if (response?.error) {
       console.log("try again, miscommunication occured. Error is: ");
       console.log(response.error);
+      return {
+        error: "error",
+      };
     }
   };
 
   #getSignature = async () => {
-    const getSignatureCommand = `${this.PAX_CONSTANTS.STX}A08[1c]${this.PROTOCOL_VERSION}[1c]0[1c]90000${this.PAX_CONSTANTS.ETX}J`;
+    // const getSignatureCommand = `${this.PAX_CONSTANTS.STX}A08[1c]${this.PROTOCOL_VERSION}[1c]0[1c]90000${this.PAX_CONSTANTS.ETX}J`;
+    const signatureImageOffset = new Uint8Array([
+      0x39, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ]);
+    let getSignatureCommand = new Uint8Array([
+      this.PAX_CONSTANTS.STX,
+      0x41,
+      0x30,
+      0x38,
+      0x1c,
+      ...this.PROTOCOL_VERSION,
+      0x1c,
+      0x00,
+      0x1c,
+      ...signatureImageOffset,
+      this.PAX_CONSTANTS.ETX,
+    ]);
+    getSignatureCommand = this.#lrcAppender(getSignatureCommand);
     await this.write(getSignatureCommand);
-    const response = await this.getPaxResponse();
-    if (response.success) {
+    const response = await this.read();
+    if (response?.success) {
       const [
         command,
         version,
@@ -174,33 +200,64 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         totalLength,
         responseLength,
         signatureData,
-      ] = response.responseData.split("[1c]");
+      ] = response.value.split(String.fromCharCode(0x1c));
       console.log(
         `Get signature command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
       return { success: "success" };
-    } else if (response.failure) {
+    } else if (response?.failure) {
       console.log("miscommunications occurred, try again.");
-      return { failure: "failure" };
+      return { error: "failure" };
     }
   };
 
-  xxx = async (amount) => {
-    // const initResult = await this.#intilialize();
-    // if (initResult.failure) {
-    // return { error: initResult.failure };
-    // }
+  pay = async (amount) => {
+    const initResult = await this.initialize();
+    if (initResult?.error) {
+      return { error: initResult.error };
+    }
     const getSigResult = await this.#getSignature();
     if (getSigResult.failure) {
       return { error: getSigResult.failure };
     }
     // [1c] means <FS> which is the separator of request/response fields
     // [1f] means <US> which is the separator of the request amount information
-    const requestAmountInformation = `${amount}[1f]0[1f]0[1f]`;
-    const saleTransactionType = "01"; // To make a normal sale transaction
-    const doCreditCommand = `${this.PAX_CONSTANTS.STX}T00[1c]${this.PROTOCOL_VERSION}[1c]${saleTransactionType}[1c]${requestAmountInformation}[1c][1c]${this.ECR_REFERENCE_NUMBER}[1c][1c][1c][1c][1c][1c]${PAX_CONSTANTS.ETX}C`;
+    amount = this.#convertToUint8Array(amount);
+    const requestAmountInformation = new Uint8Array([
+      ...amount,
+      0x1f,
+      0x00,
+      0x1f,
+      0x00,
+      0x1f,
+    ]);
+    const saleTransactionType = 0x01; // To make a normal sale transaction
+    // const doCreditCommand = `${this.PAX_CONSTANTS.STX}T00[1c]${this.PROTOCOL_VERSION}[1c]${saleTransactionType}[1c]${requestAmountInformation}[1c][1c]${this.ECR_REFERENCE_NUMBER}[1c][1c][1c][1c][1c][1c]${PAX_CONSTANTS.ETX}C`;
+    let doCreditCommand = new Uint8Array([
+      this.PAX_CONSTANTS.STX,
+      0x54,
+      0x30,
+      0x30,
+      0x1c,
+      ...this.PROTOCOL_VERSION,
+      0x1c,
+      saleTransactionType,
+      0x1c,
+      ...requestAmountInformation,
+      0x1c,
+      0x1c,
+      this.ECR_REFERENCE_NUMBER,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x1c,
+      this.PAX_CONSTANTS.ETX,
+    ]);
+    doCreditCommand = this.#lrcAppender(doCreditCommand);
     await this.write(doCreditCommand);
-    const response = await this.getPaxResponse();
+    const response = await this.read();
     if (response.success) {
       const [
         command,
@@ -216,7 +273,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         commercialInfomration,
         eCommerce,
         additionalInformation,
-      ] = response.responseData.split("[1c]");
+      ] = response.value.split(String.fromCharCode(0x1c));
       console.log(`payment result is: ${responseCode}`);
       console.log(
         `Do credit command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
@@ -234,20 +291,50 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         eCommerce,
         additionalInformation,
       };
-    } else if (response.failure) {
+    } else if (response.error) {
       console.log("Couldn't do credit");
     }
   };
 
   getInputAccount = async () => {
     // const getInputCommand = `${this.PAX_CONSTANTS.STX}A30[1c]${this.PROTOCOL_VERSION}[1c]1[1c]1[1c]1[1c]1[1c][1c][200][1c][1c][1c][1c][1c]01[1c]01[1c][1c]${this.PAX_CONSTANTS.ETX}J`;
-    const getInputCommand = new Uint8Array([
-      0x02, 0x41, 0x33, 0x30, 0x1c, 0x31, 0x2e, 0x35, 0x38, 0x1c, 0x31, 0x1c,
-      0x30, 0x1c, 0x31, 0x1c, 0x31, 0x1c, 0x1c, 0x32, 0x30, 0x30, 0x1c, 0x1c,
-      0x1c, 0x1c, 0x1c, 0x30, 0x31, 0x1c, 0x30, 0x31, 0x1c, 0x1c, 0x03, 0x77,
+    let getInputCommand = new Uint8Array([
+      this.PAX_CONSTANTS.STX,
+      0x41,
+      0x33,
+      0x30,
+      0x1c,
+      ...this.PROTOCOL_VERSION,
+      0x1c,
+      0x31,
+      0x1c,
+      0x30,
+      0x1c,
+      0x31,
+      0x1c,
+      0x31,
+      0x1c,
+      0x1c,
+      0x32,
+      0x30,
+      0x30,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x1c,
+      0x30,
+      0x31,
+      0x1c,
+      0x30,
+      0x31,
+      0x1c,
+      0x1c,
+      this.PAX_CONSTANTS.ETX,
     ]);
+    getInputCommand = this.#lrcAppender(getInputCommand);
     await this.write(getInputCommand);
-    const response = await this.getPaxResponse();
+    const response = await this.read();
 
     if (response?.success) {
       const [
@@ -264,7 +351,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         QRCode,
         KSN,
         additionalInformation,
-      ] = response.responseData.split(0x1c);
+      ] = response.value.split(String.fromCharCode(0x1c));
       console.log(
         `Get input account command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
@@ -274,33 +361,32 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         exp: expiryDate,
         cc: PAN,
       };
-    } else if (response?.failure) {
+    } else if (response?.error) {
       console.log("Couldn't get input account");
     }
   };
 
-  // showMessage = async (message) => {
-  showMessage = async () => {
-    const message = new Uint8Array([
-      0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x49, 0x20, 0x61, 0x6d, 0x20, 0x61,
-      0x20, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-    ]);
-    const title = new Uint8Array([0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65]);
+  /**
+   * Shows a message on the PAX device display.
+   *
+   * @param {{title: string, body: string}} message Represents the message
+   *     to be shown on the PAX device
+   */
+  showMessage = async (message) => {
+    const messageBody = this.#convertToUint8Array(message.body);
+    const messageTitle = this.#convertToUint8Array(message.title);
     // const showMessageCommand = `${this.PAX_CONSTANTS.STX}A10[1c]${this.PROTOCOL_VERSION}[1c]${message.body}[1c]${message.title}[1c][1c][1c][1c]5[1c][1c][1c][1c]${this.PAX_CONSTANTS.ETX}K`;
-    const showMessageCommand = new Uint8Array([
-      0x02,
+    let showMessageCommand = new Uint8Array([
+      this.PAX_CONSTANTS.STX,
       0x41,
       0x31,
       0x30,
       0x1c,
-      0x31,
-      0x2e,
-      0x32,
-      0x36,
+      ...this.PROTOCOL_VERSION,
       0x1c,
-      ...message,
+      ...messageBody,
       0x1c,
-      ...title,
+      ...messageTitle,
       0x1c,
       0x1c,
       0x1c,
@@ -310,16 +396,15 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1c,
       0x1c,
       0x1c,
-      0x03,
-      0x34,
+      this.PAX_CONSTANTS.ETX,
     ]);
-    console.log(`command sent: ${showMessageCommand}`);
+    showMessageCommand = this.#lrcAppender(showMessageCommand);
     await this.write(showMessageCommand);
-    const response = await this.getPaxResponse();
+    const response = await this.read();
     console.log(`response: ${response}`);
     if (response?.success) {
       const [command, version, responseCode, responseMessage] =
-        response.responseData.split("[1c]");
+        response.value.split(String.fromCharCode(0x1c));
       console.log(
         `Show message command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
@@ -328,17 +413,18 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     }
   };
 
+  // TODO address it
   clearMessage = async () => {
     const clearMessageCommand = `${this.PAX_CONSTANTS.STX}A12[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
     await this.write(clearMessageCommand);
-    const response = await this.getPaxResponse();
-    if (response.success) {
+    const response = await this.read();
+    if (response?.success) {
       const [command, version, responseCode, responseMessage] =
-        response.responseData.split("[1c]");
+        response.value.split("[1c]");
       console.log(
         `Clear message command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
-    } else if (response.failure) {
+    } else if (response?.failure) {
       console.log("Couldn't clear message");
     }
   };

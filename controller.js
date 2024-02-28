@@ -20,16 +20,16 @@ const pay = async (event) => {
   console.log(paxPaymentResult);
 };
 
-const listen = async () => {
-  await paxInstance.getPaxResponse();
+const initialize = async () => {
+  await paxInstance.initialize();
 };
 
-// const acknowledge = async () => {
-//   await paxInstance.sendAcknowledge();
-// };
-
 const showMessage = async () => {
-  await paxInstance.showMessage();
+  const message = {
+    title: "Greetings",
+    body: "Hello Omar",
+  };
+  await paxInstance.showMessage(message);
 };
 
 const getInputAccount = async () => {
@@ -39,10 +39,9 @@ const getInputAccount = async () => {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("connect").addEventListener("click", connect);
   document.getElementById("pay-form").addEventListener("submit", pay);
-  document.getElementById("listen-button").addEventListener("click", listen);
-  // document
-  //   .getElementById("acknowledge-button")
-  //   .addEventListener("click", acknowledge);
+  document
+    .getElementById("initialize-button")
+    .addEventListener("click", initialize);
   document
     .getElementById("show-message-button")
     .addEventListener("click", showMessage);
