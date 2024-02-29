@@ -229,7 +229,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x00,
       0x1f,
       0x00,
-      0x1f,
     ]);
     const saleTransactionType = 0x01; // To make a normal sale transaction
     // const doCreditCommand = `${this.PAX_CONSTANTS.STX}T00[1c]${this.PROTOCOL_VERSION}[1c]${saleTransactionType}[1c]${requestAmountInformation}[1c][1c]${this.ECR_REFERENCE_NUMBER}[1c][1c][1c][1c][1c][1c]${PAX_CONSTANTS.ETX}C`;
