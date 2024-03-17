@@ -61,6 +61,7 @@ export class BaseDeviceSerialDriver {
    * @returns {ReadingSuccess | FunctionalityFailure}
    */
   read = async () => {
+    console.error("I shouldn't be called");
     const reader = this.device.readable.getReader();
     let completeResponse = [];
     while (true) {

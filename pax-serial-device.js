@@ -50,6 +50,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
         if (done) {
           console.log(this.device);
+          console.log(reader);
           reader.releaseLock();
           return {
             success: "Success at reading",
@@ -73,7 +74,10 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
               indexBeforeETX
             );
             console.log(this.device);
+            console.log(reader);
             reader.releaseLock();
+            console.log(this.device);
+            console.log(reader);
             return {
               success: "Success at reading",
               value: decoder.decode(Uint8Array.from(completeResponse)),
