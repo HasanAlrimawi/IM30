@@ -286,7 +286,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1f,
       0x1f,
       0x1f,
-      Array.from(
+      ...Array.from(
         this.#convertToUint8Array(
           response.traceInformation.split(String.fromCharCode(0x1f))[0]
         )
@@ -300,7 +300,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         setTimeout(resolve, ms);
       });
     }
-    await delay(5000);
+    console.log("Before delay");
+    await delay(10000);
+    console.log("After delay");
     response = await this.doCredit(doCreditFields);
     console.log(response);
 
