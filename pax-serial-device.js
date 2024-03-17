@@ -244,6 +244,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     // [1c] means <FS> which is the separator of request/response fields
     // [1f] means <US> which is the separator of the request amount information
     amount = this.#convertToUint8Array(amount);
+    amount = Array.from(amount);
+    amount = [...amount, 0x30, 0x30];
     // const requestAmountInformation = new Uint8Array([
     //   ...amount,
     //   0x1f,
@@ -278,15 +280,19 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         response.traceInformation.split(String.fromCharCode(0x1f))[0]
       }`
     );
-    doCreditFields.saleTransactionType = 0x04;
+    doCreditFields.saleTransactionType = [0x30, 0x34];
     doCreditFields.requestTraceInformation = [
       this.ECR_REFERENCE_NUMBER,
       0x1f,
       0x1f,
       0x1f,
-      response.traceInformation.split(String.fromCharCode(0x1f))[0],
+      Array.from(
+        this.#convertToUint8Array(
+          response.traceInformation.split(String.fromCharCode(0x1f))[0]
+        )
+      ),
     ];
-    doCreditFields.requestAmountInformation = Array.from(amount);
+    doCreditFields.requestAmountInformation = amount;
     console.log("doCreditFields:");
     console.log(doCreditFields);
     response = await this.doCredit(doCreditFields);
@@ -395,6 +401,11 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         `Do credit command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
       console.log(response.value.split(String.fromCharCode(0x1c)));
+      console.log(
+        response.value
+          .split(String.fromCharCode(0x1c))[4]
+          .split(String.fromCharCode(0x1f))
+      );
       if (responseCode == "000000") {
         return {
           success: "success",
