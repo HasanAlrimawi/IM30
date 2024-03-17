@@ -85,7 +85,9 @@ export class BaseDeviceSerialDriver {
 
   write = async (data) => {
     const writer = this.device.writable.getWriter();
+    console.log("started sending to terminal");
     await writer.write(data);
+    console.log("finished sending to terminal");
     writer.releaseLock();
   };
 }

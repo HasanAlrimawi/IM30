@@ -356,10 +356,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     let doCreditRequest = Uint8Array.from(
       doCreditRequestArray.filter((element) => element !== "na")
     );
-    console.log(doCreditRequestArray);
+    console.log(doCreditRequest);
     doCreditRequest = this.#lrcAppender(doCreditRequest);
+    console.log(doCreditRequest);
     await this.write(doCreditRequest);
+    console.log("before starting reading");
     const response = await this.read();
+    console.log("finished reading");
 
     if (response.success) {
       const [
@@ -420,6 +423,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       console.log("Couldn't do credit, error");
       return { error: response.error };
     }
+    console.log(response);
   };
 
   getInputAccount = async () => {
