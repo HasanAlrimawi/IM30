@@ -248,7 +248,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     amount = [...amount, 0x30, 0x30];
     const numOfTimes = 9 - amount.length;
 
-    for (const x = 0; x < numOfTimes; x++) {
+    for (let x = 0; x < numOfTimes; x++) {
       amount.unshift(0x30);
     }
     console.log(amount);
