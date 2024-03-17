@@ -91,7 +91,7 @@ export class BaseDeviceSerialDriver {
     console.log("started sending to terminal");
     await writer.write(data);
     console.log("finished sending to terminal");
-    writer.close();
-    writer.releaseLock();
+    // await writer.cancel();
+    await writer.releaseLock();
   };
 }

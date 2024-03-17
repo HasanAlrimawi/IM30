@@ -51,8 +51,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         if (done) {
           console.log(this.device);
           console.log(reader);
-          reader.cancel();
-          reader.releaseLock();
+          await reader.cancel();
+          await reader.releaseLock();
           console.log("returning from etx finish");
           return {
             success: "Success at reading",
@@ -80,8 +80,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             console.log(completeResponse);
             console.log(this.device);
             console.log(reader);
-            reader.close();
-            reader.releaseLock();
+            await reader.cancel();
+            await reader.releaseLock();
             console.log(this.device);
             console.log(reader);
             console.log("returning from etx finish");
