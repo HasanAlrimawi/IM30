@@ -292,11 +292,16 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1f,
       0x1f,
       0x1f,
-      ...Array.from(
-        this.#convertToUint8Array(
-          response.traceInformation.split(String.fromCharCode(0x1f))[0]
-        )
-      ),
+      ...[
+        0x30,
+        0x30,
+        0x30,
+        ...Array.from(
+          this.#convertToUint8Array(
+            response.traceInformation.split(String.fromCharCode(0x1f))[0]
+          )
+        ),
+      ],
     ];
     console.log(
       this.#convertToUint8Array(
