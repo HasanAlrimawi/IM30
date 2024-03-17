@@ -295,6 +295,12 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     doCreditFields.requestAmountInformation = amount;
     console.log("doCreditFields:");
     console.log(doCreditFields);
+    function delay(ms) {
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    }
+    await delay(5000);
     response = await this.doCredit(doCreditFields);
     console.log(response);
 
