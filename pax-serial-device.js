@@ -254,9 +254,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     // const saleTransactionType = 0x01; // To make a normal sale transaction
     // const doCreditCommand = `${this.PAX_CONSTANTS.STX}T00[1c]${this.PROTOCOL_VERSION}[1c]${saleTransactionType}[1c]${requestAmountInformation}[1c][1c]${this.ECR_REFERENCE_NUMBER}[1c][1c][1c][1c][1c][1c]${PAX_CONSTANTS.ETX}C`;
     let doCreditFields = {
-      saleTransactionType: 0x33, // auth transaction
+      saleTransactionType: [0x30, 0x33], // auth transaction
       requestAmountInformation: [
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00,
       ],
       requestTraceInformation: [this.ECR_REFERENCE_NUMBER],
     };
@@ -314,9 +314,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1c,
       ...this.PROTOCOL_VERSION,
       0x1c,
-      doCreditRequestOptions.saleTransactionType
+      ...(doCreditRequestOptions.saleTransactionType
         ? doCreditRequestOptions.saleTransactionType
-        : "na",
+        : ["na"]),
       0x1c,
       ...(doCreditRequestOptions.requestAmountInformation
         ? doCreditRequestOptions.requestAmountInformation
