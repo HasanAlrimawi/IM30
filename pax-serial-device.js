@@ -246,6 +246,12 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     amount = this.#convertToUint8Array(amount);
     amount = Array.from(amount);
     amount = [...amount, 0x30, 0x30];
+    const numOfTimes = 9 - amount.length;
+
+    for (const x = 0; x < numOfTimes; x++) {
+      amount.unshift(0x30);
+    }
+    console.log(amount);
     // const requestAmountInformation = new Uint8Array([
     //   ...amount,
     //   0x1f,
@@ -414,6 +420,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           .split(String.fromCharCode(0x1c))[4]
           .split(String.fromCharCode(0x1f))
       );
+      console.log(response.value);
       if (responseCode == "000000") {
         return {
           success: "success",
