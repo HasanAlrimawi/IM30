@@ -118,7 +118,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     const lrc = command
       .subarray(1)
       .reduce((acc, currentValue) => (acc ^= currentValue), 0);
-    const finalCommandArray = new Uint8Array([...command, lrc])
+    const finalCommandArray = new Uint8Array([...command, lrc]);
     return finalCommandArray;
   };
 
@@ -140,6 +140,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     await this.write(commandArray);
     const response = await this.read();
     console.log(response);
+
     if (response?.success) {
       const [
         command,
@@ -161,6 +162,24 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       console.log(
         `Initialize command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
+      return {
+        success: "successful communication with terminal",
+        command,
+        version,
+        responseCode,
+        responseMessage,
+        SN,
+        modelName,
+        OSVersion,
+        MACAdress,
+        numberOfLinesPerScreen,
+        numberOfCharsPerLine,
+        additionalInformation,
+        touchScreen,
+        HWConfigBitmap,
+        appActivated,
+        licenseExpiry,
+      };
     } else if (response?.error) {
       console.log("try again, miscommunication occured. Error is: ");
       console.log(response.error);
@@ -216,47 +235,111 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     if (initResult?.error) {
       return { error: initResult.error };
     }
-    const getSigResult = await this.#getSignature();
-    if (getSigResult.failure) {
-      return { error: getSigResult.failure };
-    }
+    console.log(initResult);
+    // const getSigResult = await this.#getSignature();
+    // if (getSigResult.failure) {
+    //   return { error: getSigResult.failure };
+    // }
     // [1c] means <FS> which is the separator of request/response fields
     // [1f] means <US> which is the separator of the request amount information
     amount = this.#convertToUint8Array(amount);
-    const requestAmountInformation = new Uint8Array([
-      ...amount,
-      0x1f,
-      0x00,
-      0x1f,
-      0x00,
-    ]);
-    const saleTransactionType = 0x01; // To make a normal sale transaction
+    // const requestAmountInformation = new Uint8Array([
+    //   ...amount,
+    //   0x1f,
+    //   0x00,
+    //   0x1f,
+    //   0x00,
+    // ]);
+    // const saleTransactionType = 0x01; // To make a normal sale transaction
     // const doCreditCommand = `${this.PAX_CONSTANTS.STX}T00[1c]${this.PROTOCOL_VERSION}[1c]${saleTransactionType}[1c]${requestAmountInformation}[1c][1c]${this.ECR_REFERENCE_NUMBER}[1c][1c][1c][1c][1c][1c]${PAX_CONSTANTS.ETX}C`;
-    let doCreditCommand = new Uint8Array([
+    let doCreditFields = {
+      saleTransactionType: 0x03, // auth transaction
+      requestAmountInformation: [0x00],
+      requestTraceInformation: [this.ECR_REFERENCE_NUMBER],
+    };
+    console.log("doCreditFields:");
+    console.log(doCreditFields);
+    let response = await this.doCredit(doCreditFields);
+
+    if (response.error) {
+      console.log("error occured");
+      return;
+    }
+    console.log(
+      `orgRefNum as it should be from trace information: ${
+        response.traceInformation.split(String.fromCharCode(0x1f))[0]
+      }`
+    );
+    doCreditFields.saleTransactionType = 0x04;
+    doCreditFields.requestTraceInformation = [
+      this.ECR_REFERENCE_NUMBER,
+      0x1f,
+      0x1f,
+      0x1f,
+      response.traceInformation.split(String.fromCharCode(0x1f))[0],
+    ];
+    doCreditFields.requestAmountInformation = Array.from(amount);
+    console.log("doCreditFields:");
+    console.log(doCreditFields);
+    response = await this.doCredit(doCreditFields);
+    console.log(response);
+  };
+
+  doCredit = async (doCreditRequestOptions) => {
+    const doCreditCommand = [0x54, 0x30, 0x30]; // T00
+    const doCreditRequestArray = [
       this.PAX_CONSTANTS.STX,
-      0x54,
-      0x30,
-      0x30,
+      ...doCreditCommand,
       0x1c,
       ...this.PROTOCOL_VERSION,
       0x1c,
-      saleTransactionType,
+      doCreditRequestOptions.saleTransactionType
+        ? doCreditRequestOptions.saleTransactionType
+        : "na",
       0x1c,
-      ...requestAmountInformation,
+      ...(doCreditRequestOptions.requestAmountInformation
+        ? doCreditRequestOptions.requestAmountInformation
+        : ["na"]),
       0x1c,
+      ...(doCreditRequestOptions.requestAccountInformation
+        ? doCreditRequestOptions.requestAccountInformation
+        : ["na"]),
       0x1c,
-      this.ECR_REFERENCE_NUMBER,
+      ...(doCreditRequestOptions.requestTraceInformation
+        ? doCreditRequestOptions.requestTraceInformation
+        : ["na"]),
       0x1c,
+      ...(doCreditRequestOptions.requestAVSInformation
+        ? doCreditRequestOptions.requestAVSInformation
+        : ["na"]),
       0x1c,
+      ...(doCreditRequestOptions.requestCashierInformation
+        ? doCreditRequestOptions.requestCashierInformation
+        : ["na"]),
       0x1c,
+      ...(doCreditRequestOptions.requestCommercialInformation
+        ? doCreditRequestOptions.requestCommercialInformation
+        : ["na"]),
       0x1c,
+      ...(doCreditRequestOptions.requestMOTOInformation
+        ? doCreditRequestOptions.requestMOTOInformation
+        : ["na"]),
       0x1c,
+      ...(doCreditRequestOptions.requestAdditionalInformation
+        ? doCreditRequestOptions.requestAdditionalInformation
+        : ["na"]),
       0x1c,
       this.PAX_CONSTANTS.ETX,
-    ]);
-    doCreditCommand = this.#lrcAppender(doCreditCommand);
-    await this.write(doCreditCommand);
+    ];
+    console.log("Do credit command in its final shape before LRC:");
+    console.log(doCreditRequestArray);
+    let doCreditRequest = Uint8Array.from(
+      doCreditRequestArray.filter((element) => element !== "na")
+    );
+    doCreditRequest = this.#lrcAppender(doCreditRequest);
+    await this.write(doCreditRequest);
     const response = await this.read();
+
     if (response.success) {
       const [
         command,
@@ -272,12 +355,20 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         commercialInfomration,
         eCommerce,
         additionalInformation,
+        VASInfromation,
+        TORInformation,
+        payloadData,
+        hostCredentialInformation,
       ] = response.value.split(String.fromCharCode(0x1c));
-      console.log(`payment result is: ${responseCode}`);
+      console.log(
+        `payment result response code is: ${responseCode} of zeros equality equality condition:`
+      );
+      console.log(responseCode === "000000");
       console.log(
         `Do credit command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
       return {
+        success: "success",
         responseCode,
         responseMessage,
         accountInformation,
@@ -289,9 +380,14 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         commercialInfomration,
         eCommerce,
         additionalInformation,
+        VASInfromation,
+        TORInformation,
+        payloadData,
+        hostCredentialInformation,
       };
     } else if (response.error) {
       console.log("Couldn't do credit");
+      return { error: "error" };
     }
   };
 
