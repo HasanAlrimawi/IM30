@@ -232,8 +232,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
   pay = async (amount) => {
     const initResult = await this.initialize();
-    if (initResult?.error) {
-      return { error: initResult.error };
+    if (initResult?.error || initResult?.responseCode != "000000") {
+      return { error: "Initialization failed" };
     }
     console.log(initResult);
     // const getSigResult = await this.#getSignature();
@@ -261,9 +261,14 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     console.log(doCreditFields);
     let response = await this.doCredit(doCreditFields);
 
-    if (response.error) {
+    if (response?.error) {
       console.log("error occured");
-      return;
+      return { error: "Auth error" };
+    } else if (response?.failure) {
+      console.log("Auth failed: " + response.responseMessage);
+      return {
+        failure: response.responseMessage,
+      };
     }
     console.log(
       `orgRefNum as it should be from trace information: ${
@@ -283,6 +288,19 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     console.log(doCreditFields);
     response = await this.doCredit(doCreditFields);
     console.log(response);
+
+    if (response?.error) {
+      console.log("error occured");
+      return { error: "PostAuth error" };
+    } else if (response?.failure) {
+      console.log("PostAuth failed");
+      return {
+        failure: response.responseMessage,
+      };
+    }
+    return {
+      success: response.responseMessage,
+    };
   };
 
   doCredit = async (doCreditRequestOptions) => {
@@ -331,7 +349,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1c,
       this.PAX_CONSTANTS.ETX,
     ];
-    console.log("Do credit command in its final shape before LRC:");
+    console.log(
+      "Do credit command in its final shape before LRC and Uint8Array conversion:"
+    );
     console.log(doCreditRequestArray);
     let doCreditRequest = Uint8Array.from(
       doCreditRequestArray.filter((element) => element !== "na")
@@ -367,27 +387,36 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       console.log(
         `Do credit command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
-      return {
-        success: "success",
-        responseCode,
-        responseMessage,
-        accountInformation,
-        amountInformation,
-        transactionType,
-        hostInformation,
-        traceInformation,
-        AVSInformation,
-        commercialInfomration,
-        eCommerce,
-        additionalInformation,
-        VASInfromation,
-        TORInformation,
-        payloadData,
-        hostCredentialInformation,
-      };
-    } else if (response.error) {
-      console.log("Couldn't do credit");
-      return { error: "error" };
+      if (responseCode == "000000") {
+        return {
+          success: "success",
+          responseCode,
+          responseMessage,
+          accountInformation,
+          amountInformation,
+          transactionType,
+          hostInformation,
+          traceInformation,
+          AVSInformation,
+          commercialInfomration,
+          eCommerce,
+          additionalInformation,
+          VASInfromation,
+          TORInformation,
+          payloadData,
+          hostCredentialInformation,
+        };
+      } else {
+        console.log("Do credit Failure");
+        return {
+          failure: "",
+          responseCode,
+          responseMessage,
+        };
+      }
+    } else if (response?.error) {
+      console.log("Couldn't do credit, error");
+      return { error: response.error };
     }
   };
 
