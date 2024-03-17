@@ -51,7 +51,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         if (done) {
           console.log(this.device);
           console.log(reader);
+          reader.cancel();
           reader.releaseLock();
+          console.log("returning from etx finish");
           return {
             success: "Success at reading",
             value: decoder.decode(Uint8Array.from(completeResponse)),
@@ -64,20 +66,25 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           completeResponse.push(...valueAsArray);
 
           if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
-            const indexBeforeETX = completeResponse.indexOf(
+            const indexBeforeETX = completeResponse.lastIndexOf(
               this.PAX_CONSTANTS.ETX
             );
-            const STXIndex = completeResponse.indexOf(this.PAX_CONSTANTS.STX);
+            const STXIndex = completeResponse.lastIndexOf(
+              this.PAX_CONSTANTS.STX
+            );
             // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
             completeResponse = completeResponse.slice(
               STXIndex + 3,
               indexBeforeETX
             );
+            console.log(completeResponse);
             console.log(this.device);
             console.log(reader);
+            reader.close();
             reader.releaseLock();
             console.log(this.device);
             console.log(reader);
+            console.log("returning from etx finish");
             return {
               success: "Success at reading",
               value: decoder.decode(Uint8Array.from(completeResponse)),
@@ -85,6 +92,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           }
         }
       } catch (error) {
+        console.error("non fatal error occured");
         return { error: error };
       }
     }
