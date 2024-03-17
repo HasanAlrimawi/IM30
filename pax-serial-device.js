@@ -49,6 +49,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         const valueAsArray = Array.from(value);
 
         if (done) {
+          console.log(this.device);
           reader.releaseLock();
           return {
             success: "Success at reading",
@@ -71,6 +72,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
               STXIndex + 3,
               indexBeforeETX
             );
+            console.log(this.device);
             reader.releaseLock();
             return {
               success: "Success at reading",
