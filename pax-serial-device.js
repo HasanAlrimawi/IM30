@@ -352,10 +352,11 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     console.log(
       "Do credit command in its final shape before LRC and Uint8Array conversion:"
     );
-    console.log(doCreditRequestArray);
+    // console.log(doCreditRequestArray);
     let doCreditRequest = Uint8Array.from(
       doCreditRequestArray.filter((element) => element !== "na")
     );
+    console.log(doCreditRequestArray);
     doCreditRequest = this.#lrcAppender(doCreditRequest);
     await this.write(doCreditRequest);
     const response = await this.read();
@@ -387,6 +388,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       console.log(
         `Do credit command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
+      console.log(response.value.split(String.fromCharCode(0x1c)));
       if (responseCode == "000000") {
         return {
           success: "success",
