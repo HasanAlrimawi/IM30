@@ -298,7 +298,21 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         )
       ),
     ];
-    doCreditFields.requestAmountInformation = amount;
+    console.log(
+      this.#convertToUint8Array(
+        response.traceInformation.split(String.fromCharCode(0x1f))[0]
+      )
+    );
+    const zero = [0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30];
+    doCreditFields.requestAmountInformation = [
+      ...amount,
+      0x1f,
+      ...zero,
+      0x1f,
+      0x1f,
+      0x1f,
+      ...zero,
+    ];
     console.log("doCreditFields:");
     console.log(doCreditFields);
     function delay(ms) {
