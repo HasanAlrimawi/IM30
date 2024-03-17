@@ -617,4 +617,21 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       );
     }
   };
+
+  clearBatch = async () => {
+    let clearBatchCommand = new Uint8Array([
+      this.PAX_CONSTANTS.STX,
+      0x62,
+      0x30,
+      0x34,
+      0x1c,
+      ...this.PROTOCOL_VERSION,
+      0x1c,
+      this.PAX_CONSTANTS.ETX,
+    ]);
+    clearBatchCommand = this.#lrcAppender(clearBatchCommand);
+    await this.write(clearBatchCommand);
+    const response = await this.read();
+    console.log(response);
+  };
 }

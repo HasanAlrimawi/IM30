@@ -36,6 +36,10 @@ const getInputAccount = async () => {
   await paxInstance.getInputAccount();
 };
 
+const clearBatch = async () => {
+  await paxInstance.clearBatch();
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("connect").addEventListener("click", connect);
   document.getElementById("pay-form").addEventListener("submit", pay);
@@ -48,4 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("get-input-account-button")
     .addEventListener("click", getInputAccount);
+
+  document.getElementById("clear-batch").addEventListener("click", clearBatch);
 });

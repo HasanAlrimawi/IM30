@@ -69,6 +69,7 @@ export class BaseDeviceSerialDriver {
         const arrayValue = Array.from(value);
         if (done) {
           reader.releaseLock();
+          console.error("finished reading");
           return {
             success: "Success at reading",
             value: Uint8Array(completeResponse),
@@ -78,6 +79,7 @@ export class BaseDeviceSerialDriver {
           completeResponse.push(...arrayValue);
         }
       } catch (error) {
+        console.error("Error while listening");
         return { error: error };
       }
     }
