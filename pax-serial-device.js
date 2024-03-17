@@ -256,7 +256,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     let doCreditFields = {
       saleTransactionType: [0x30, 0x33], // auth transaction
       requestAmountInformation: [
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
       ],
       requestTraceInformation: [this.ECR_REFERENCE_NUMBER],
     };
