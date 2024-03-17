@@ -231,11 +231,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
   };
 
   pay = async (amount) => {
-    const initResult = await this.initialize();
-    if (initResult?.error || initResult?.responseCode != "000000") {
-      return { error: "Initialization failed" };
-    }
-    console.log(initResult);
+    // const initResult = await this.initialize();
+    // if (initResult?.error || initResult?.responseCode != "000000") {
+    //   return { error: "Initialization failed" };
+    // }
+    // console.log(initResult);
+
+
     // const getSigResult = await this.#getSignature();
     // if (getSigResult.failure) {
     //   return { error: getSigResult.failure };
