@@ -53,7 +53,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           console.log(reader);
           await reader.cancel();
           await reader.releaseLock();
-          console.log("returning from etx finish");
+          console.error("returning from done condition finish of read function");
           return {
             success: "Success at reading",
             value: decoder.decode(Uint8Array.from(completeResponse)),
@@ -61,8 +61,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         }
 
         if (value) {
-          console.log("new value read within read function");
+          console.log("\nnew value read within read function");
           console.log(value);
+          console.log("\n")
           completeResponse.push(...valueAsArray);
 
           if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
@@ -72,18 +73,14 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             const STXIndex = completeResponse.lastIndexOf(
               this.PAX_CONSTANTS.STX
             );
+            console.warn(decoder.decode(Uint8Array.from(completeResponse)));
             // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
             completeResponse = completeResponse.slice(
               STXIndex + 3,
               indexBeforeETX
             );
-            console.log(completeResponse);
-            console.log(this.device);
-            console.log(reader);
-            await reader.cancel();
+            // await reader.cancel();
             await reader.releaseLock();
-            console.log(this.device);
-            console.log(reader);
             console.log("returning from etx finish");
             return {
               success: "Success at reading",
@@ -265,7 +262,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     for (let x = 0; x < numOfTimes; x++) {
       amount.unshift(0x30);
     }
-    console.log(amount);
     // const requestAmountInformation = new Uint8Array([
     //   ...amount,
     //   0x1f,
@@ -282,8 +278,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       ],
       requestTraceInformation: [this.ECR_REFERENCE_NUMBER],
     };
-    console.log("doCreditFields:");
-    console.log(doCreditFields);
     let response = await this.doCredit(doCreditFields);
 
     if (response?.error) {
@@ -317,11 +311,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         ),
       ],
     ];
-    console.log(
-      this.#convertToUint8Array(
-        response.traceInformation.split(String.fromCharCode(0x1f))[0]
-      )
-    );
     const zero = [0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30];
     doCreditFields.requestAmountInformation = [
       ...amount,
@@ -332,8 +321,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1f,
       ...zero,
     ];
-    console.log("doCreditFields:");
-    console.log(doCreditFields);
     function delay(ms) {
       return new Promise((resolve) => {
         setTimeout(resolve, ms);
@@ -405,20 +392,12 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1c,
       this.PAX_CONSTANTS.ETX,
     ];
-    console.log(
-      "Do credit command in its final shape before LRC and Uint8Array conversion:"
-    );
-    // console.log(doCreditRequestArray);
     let doCreditRequest = Uint8Array.from(
       doCreditRequestArray.filter((element) => element !== "na")
     );
-    console.log(doCreditRequest);
     doCreditRequest = this.#lrcAppender(doCreditRequest);
-    console.log(doCreditRequest);
     await this.write(doCreditRequest);
-    console.log("before starting reading");
     const response = await this.read();
-    console.log("finished reading");
 
     if (response.success) {
       const [
@@ -441,19 +420,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         hostCredentialInformation,
       ] = response.value.split(String.fromCharCode(0x1c));
       console.log(
-        `payment result response code is: ${responseCode} of zeros equality equality condition:`
+        `\n\nDo credit command:\nCommand: ${command}\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\nTrace Information: ${traceInformation}\ntransaction type: ${transactionType}\n\n`
       );
-      console.log(responseCode === "000000");
-      console.log(
-        `Do credit command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
-      );
-      console.log(response.value.split(String.fromCharCode(0x1c)));
       console.log(
         response.value
           .split(String.fromCharCode(0x1c))[4]
           .split(String.fromCharCode(0x1f))
       );
-      console.log(response.value);
       if (responseCode == "000000") {
         return {
           success: "success",
@@ -474,6 +447,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           hostCredentialInformation,
         };
       } else {
+        console.log(response);
         console.log("Do credit Failure");
         return {
           failure: "",
