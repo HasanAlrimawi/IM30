@@ -42,7 +42,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     const reader = this.device.readable.getReader();
     let completeResponse = [];
     const decoder = new TextDecoder();
-    const counter = 0;
+    let counter = 0;
 
     while (true) {
       try {
@@ -70,7 +70,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           completeResponse.push(...valueAsArray);
 
           if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
-            const indexBeforeETX = completeResponse.lastIndexOf(
+            const ETXIndex = completeResponse.lastIndexOf(
               this.PAX_CONSTANTS.ETX
             );
             const STXIndex = completeResponse.lastIndexOf(
@@ -80,7 +80,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
             completeResponse = completeResponse.slice(
               STXIndex + 3,
-              indexBeforeETX
+              ETXIndex
             );
             counter++;
             if (counter === 4) {
