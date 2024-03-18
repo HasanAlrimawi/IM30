@@ -42,6 +42,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     const reader = this.device.readable.getReader();
     let completeResponse = [];
     const decoder = new TextDecoder();
+    const counter = 0;
 
     while (true) {
       try {
@@ -53,7 +54,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           console.log(reader);
           await reader.cancel();
           await reader.releaseLock();
-          console.error("returning from done condition finish of read function");
+          console.error(
+            "returning from done condition finish of read function"
+          );
           return {
             success: "Success at reading",
             value: decoder.decode(Uint8Array.from(completeResponse)),
@@ -63,7 +66,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         if (value) {
           console.log("\nnew value read within read function");
           console.log(value);
-          console.log("\n")
+          console.log("\n");
           completeResponse.push(...valueAsArray);
 
           if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
@@ -79,13 +82,16 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
               STXIndex + 3,
               indexBeforeETX
             );
+            counter++;
+            if (counter === 4) {
+              await reader.releaseLock();
+              console.log("returning from etx finish");
+              return {
+                success: "Success at reading",
+                value: decoder.decode(Uint8Array.from(completeResponse)),
+              };
+            }
             // await reader.cancel();
-            await reader.releaseLock();
-            console.log("returning from etx finish");
-            return {
-              success: "Success at reading",
-              value: decoder.decode(Uint8Array.from(completeResponse)),
-            };
           }
         }
       } catch (error) {
