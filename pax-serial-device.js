@@ -42,6 +42,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     const reader = this.device.readable.getReader();
     let completeResponse = [];
     const decoder = new TextDecoder();
+    const allResponses = [];
 
     while (true) {
       try {
@@ -53,7 +54,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           console.log(reader);
           await reader.cancel();
           await reader.releaseLock();
-          console.error("returning from done condition finish of read function");
+          console.error(
+            "returning from done condition finish of read function"
+          );
           return {
             success: "Success at reading",
             value: decoder.decode(Uint8Array.from(completeResponse)),
@@ -61,11 +64,12 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         }
 
         if (value) {
-          console.log("\nnew value read within read function");
-          console.log(value);
-          console.log("\n")
+          console.log("\nnew value read within read function  --->");
+          console.log(decoder.decode(Uint8Array.from(valueAsArray)));
+          console.log("\n");
           completeResponse.push(...valueAsArray);
 
+          // FOREVER, this will add all responses stx-etx to allResponses array
           if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
             const indexBeforeETX = completeResponse.lastIndexOf(
               this.PAX_CONSTANTS.ETX
@@ -73,19 +77,33 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             const STXIndex = completeResponse.lastIndexOf(
               this.PAX_CONSTANTS.STX
             );
-            console.warn(decoder.decode(Uint8Array.from(completeResponse)));
+            // console.warn(decoder.decode(Uint8Array.from(completeResponse)));
+            console.log(
+              "Complete response length BEFORE extraction using STX-ETX"
+            );
+            console.log(completeResponse.length);
+            console.log();
             // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
             completeResponse = completeResponse.slice(
               STXIndex + 3,
               indexBeforeETX
             );
+            console.log(
+              "Complete response length AFTER extraction using STX-ETX"
+            );
+            console.log(completeResponse.length);
+            allResponses.push(
+              decoder.decode(Uint8Array.from(completeResponse))
+            );
+            console.log("\nAll responses:");
+            console.log(allResponses);
+            console.log();
             // await reader.cancel();
-            await reader.releaseLock();
-            console.log("returning from etx finish");
-            return {
-              success: "Success at reading",
-              value: decoder.decode(Uint8Array.from(completeResponse)),
-            };
+            // await reader.releaseLock();
+            // return {
+            //   success: "Success at reading",
+            //   value: decoder.decode(Uint8Array.from(completeResponse)),
+            // };
           }
         }
       } catch (error) {
@@ -150,7 +168,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     commandArray = this.#lrcAppender(commandArray);
     await this.write(commandArray);
     const response = await this.read();
-    console.log(response);
+    // console.log(response);
 
     if (response?.success) {
       const [
@@ -294,56 +312,56 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         response.traceInformation.split(String.fromCharCode(0x1f))[0]
       }`
     );
-    doCreditFields.saleTransactionType = [0x30, 0x34];
-    doCreditFields.requestTraceInformation = [
-      this.ECR_REFERENCE_NUMBER,
-      0x1f,
-      0x1f,
-      0x1f,
-      ...[
-        0x30,
-        0x30,
-        0x30,
-        ...Array.from(
-          this.#convertToUint8Array(
-            response.traceInformation.split(String.fromCharCode(0x1f))[0]
-          )
-        ),
-      ],
-    ];
-    const zero = [0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30];
-    doCreditFields.requestAmountInformation = [
-      ...amount,
-      0x1f,
-      ...zero,
-      0x1f,
-      0x1f,
-      0x1f,
-      ...zero,
-    ];
-    function delay(ms) {
-      return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-      });
-    }
-    console.log("Before delay");
-    await delay(10000);
-    console.log("After delay");
-    response = await this.doCredit(doCreditFields);
-    console.log(response);
+    // doCreditFields.saleTransactionType = [0x30, 0x34];
+    // doCreditFields.requestTraceInformation = [
+    //   this.ECR_REFERENCE_NUMBER,
+    //   0x1f,
+    //   0x1f,
+    //   0x1f,
+    //   ...[
+    //     0x30,
+    //     0x30,
+    //     0x30,
+    //     ...Array.from(
+    //       this.#convertToUint8Array(
+    //         response.traceInformation.split(String.fromCharCode(0x1f))[0]
+    //       )
+    //     ),
+    //   ],
+    // ];
+    // const zero = [0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30];
+    // doCreditFields.requestAmountInformation = [
+    //   ...amount,
+    //   0x1f,
+    //   ...zero,
+    //   0x1f,
+    //   0x1f,
+    //   0x1f,
+    //   ...zero,
+    // ];
+    // function delay(ms) {
+    //   return new Promise((resolve) => {
+    //     setTimeout(resolve, ms);
+    //   });
+    // }
+    // console.log("Before delay");
+    // await delay(10000);
+    // console.log("After delay");
+    // response = await this.doCredit(doCreditFields);
+    // console.log(response);
 
-    if (response?.error) {
-      console.log("error occured");
-      return { error: "PostAuth error" };
-    } else if (response?.failure) {
-      console.log("PostAuth failed");
-      return {
-        failure: response.responseMessage,
-      };
-    }
-    return {
-      success: response.responseMessage,
-    };
+    // if (response?.error) {
+    //   console.log("error occured");
+    //   return { error: "PostAuth error" };
+    // } else if (response?.failure) {
+    //   console.log("PostAuth failed");
+    //   return {
+    //     failure: response.responseMessage,
+    //   };
+    // }
+    // return {
+    //   success: response.responseMessage,
+    // };
   };
 
   doCredit = async (doCreditRequestOptions) => {
