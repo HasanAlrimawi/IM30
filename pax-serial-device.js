@@ -67,6 +67,16 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
   //             String.fromCharCode(0x04)
   //           )}`
   //         );
+  //         console.log(
+  //           `valueAsArray.includes(ACK) = ${valueAsArray.includes(
+  //             String.fromCharCode(0x06)
+  //           )}`
+  //         );
+  //         console.log(
+  //           `valueAsArray.includes(NAK) = ${valueAsArray.includes(
+  //             String.fromCharCode(0x15)
+  //           )}`
+  //         );
   //         completeResponse.push(...valueAsArray);
 
   //         // FOREVER, this will add all responses stx-etx to allResponses array
@@ -154,6 +164,16 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           console.log(
             `valueAsArray.includes(EOT) = ${valueAsArray.includes(
               String.fromCharCode(0x04)
+            )}`
+          );
+          console.log(
+            `valueAsArray.includes(ACK) = ${valueAsArray.includes(
+              String.fromCharCode(0x06)
+            )}`
+          );
+          console.log(
+            `valueAsArray.includes(NAK) = ${valueAsArray.includes(
+              String.fromCharCode(0x15)
             )}`
           );
           completeResponse.push(...valueAsArray);
