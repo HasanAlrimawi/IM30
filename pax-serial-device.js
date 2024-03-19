@@ -185,12 +185,11 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             timeRegisterSentACK = new Date();
             numberOfACKsRegisterSent++;
             fullResponseReceived = true; // to be deleted when lrc checking is added
-            // await reader.cancel();
           }
         }
       } catch (error) {
-        console.error("non fatal error occured");
-        console.log(error);
+        console.error("Some exception has been thrown");
+        console.error(error);
         return { error: error, tryAgain: false };
       }
     }
@@ -379,21 +378,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       );
       return {
         success: "successful communication with terminal",
-        command,
-        version,
         responseCode,
         responseMessage,
-        SN,
-        modelName,
-        OSVersion,
-        MACAdress,
-        numberOfLinesPerScreen,
-        numberOfCharsPerLine,
-        additionalInformation,
-        touchScreen,
-        HWConfigBitmap,
-        appActivated,
-        licenseExpiry,
       };
     } else if (response?.error) {
       console.log("Init failed, Error is: ");
@@ -450,12 +436,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     // if (initResult?.error || initResult?.responseCode != "000000") {
     //   return { error: "Initialization failed" };
     // }
-    // console.log(initResult);
 
-    // const getSigResult = await this.#getSignature();
-    // if (getSigResult.failure) {
-    //   return { error: getSigResult.failure };
-    // }
     // [1c] means <FS> which is the separator of request/response fields
     // [1f] means <US> which is the separator of the request amount information
     amount = this.#convertToUint8Array(amount);
@@ -797,17 +778,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       );
     } else if (response?.failure) {
       console.log("Couldn't clear message");
-    }
-  };
-
-  payByGateway = async (amount) => {
-    const accountDetailsRequest = await this.getInputAccount();
-    if (accountDetailsRequest.success) {
-      return await this.paymentGateway.payByTrustCommerce(
-        amount,
-        accountDetailsRequest.cc,
-        accountDetailsRequest.exp
-      );
     }
   };
 
