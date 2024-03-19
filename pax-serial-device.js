@@ -62,7 +62,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           console.log("\nnew value read within read function  --->");
           console.log(decoder.decode(Uint8Array.from(valueAsArray)));
           console.log("\n");
-          const EOTIndex = valueAsArray.findIndex((item) => item == 6);
+          const EOTIndex = valueAsArray.findIndex((item) => item == 4);
           console.log(
             `valueAsArray.includes(EOT) = ${valueAsArray.findIndex(
               (item) => item == 4
