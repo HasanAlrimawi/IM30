@@ -33,110 +33,11 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
   };
 
   //the below one also checks for EOT but send ACK as soon as complete response STX-ETX has been discovered.
-  // read = async () => {
-  //   const reader = this.device.readable.getReader();
-  //   let completeResponse = [];
-  //   const decoder = new TextDecoder();
-  //   const allResponses = [];
-
-  //   while (true) {
-  //     try {
-  //       const { value, done } = await reader.read();
-  //       const valueAsArray = Array.from(value);
-
-  //       if (done) {
-  //         console.log(this.device);
-  //         console.log(reader);
-  //         await reader.cancel();
-  //         await reader.releaseLock();
-  //         console.error(
-  //           "returning from done condition finish of read function"
-  //         );
-  //         return {
-  //           success: "Success at reading",
-  //           value: decoder.decode(Uint8Array.from(completeResponse)),
-  //         };
-  //       }
-
-  //       if (value) {
-  //         console.log("\nnew value read within read function  --->");
-  //         console.log(decoder.decode(Uint8Array.from(valueAsArray)));
-  //         console.log("\n");
-  //         console.log(
-  //           `valueAsArray.includes(EOT) = ${valueAsArray.includes(
-  //             String.fromCharCode(0x04)
-  //           )}`
-  //         );
-  //         console.log(
-  //           `valueAsArray.includes(ACK) = ${valueAsArray.includes(
-  //             String.fromCharCode(0x06)
-  //           )}`
-  //         );
-  //         console.log(
-  //           `valueAsArray.includes(NAK) = ${valueAsArray.includes(
-  //             String.fromCharCode(0x15)
-  //           )}`
-  //         );
-  //         completeResponse.push(...valueAsArray);
-
-  //         // FOREVER, this will add all responses stx-etx to allResponses array
-  //         if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
-  //           const indexBeforeETX = completeResponse.lastIndexOf(
-  //             this.PAX_CONSTANTS.ETX
-  //           );
-  //           const STXIndex = completeResponse.lastIndexOf(
-  //             this.PAX_CONSTANTS.STX
-  //           );
-  //           // console.warn(decoder.decode(Uint8Array.from(completeResponse)));
-  //           console.log(
-  //             "Complete response length BEFORE extraction using STX-ETX"
-  //           );
-  //           console.log(completeResponse.length);
-  //           console.log();
-  //           // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
-  //           completeResponse = completeResponse.slice(
-  //             STXIndex + 3,
-  //             indexBeforeETX
-  //           );
-  //           console.log(
-  //             "Complete response length AFTER extraction using STX-ETX"
-  //           );
-  //           console.log(completeResponse.length);
-  //           allResponses.push(
-  //             decoder.decode(Uint8Array.from(completeResponse))
-  //           );
-  //           console.log("\nAll responses:");
-  //           console.log(allResponses);
-  //           console.log();
-  //           await this.write(this.PAX_CONSTANTS.ACK);
-  //           // await reader.cancel();
-  //           // await reader.releaseLock();
-  //           // return {
-  //           //   success: "Success at reading",
-  //           //   value: decoder.decode(Uint8Array.from(completeResponse)),
-  //           // };
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("non fatal error occured");
-  //       return { error: error };
-  //     }
-  //   }
-  // };
-
-  // the below one is with checking EOT for every value that has been read
-  /**
-   * Keeps on reading the serial port until there's nothing to read or
-   *     end of transaction received, or some fatal error occured.
-   *
-   * @returns {ReadingSuccess | FunctionalityFailure}
-   */
   read = async () => {
     const reader = this.device.readable.getReader();
     let completeResponse = [];
     const decoder = new TextDecoder();
     const allResponses = [];
-    const allCapturedValues = [];
 
     while (true) {
       try {
@@ -162,22 +63,21 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           console.log(decoder.decode(Uint8Array.from(valueAsArray)));
           console.log("\n");
           console.log(
-            `valueAsArray.includes(EOT) = ${valueAsArray.includes(
-              String.fromCharCode(0x04)
+            `valueAsArray.includes(EOT) = ${valueAsArray.findIndex(
+              (item) => item == 4
             )}`
           );
           console.log(
-            `valueAsArray.includes(ACK) = ${valueAsArray.includes(
-              String.fromCharCode(0x06)
+            `valueAsArray.includes(ACK) = ${valueAsArray.findIndex(
+              (item) => item == 6
             )}`
           );
           console.log(
-            `valueAsArray.includes(NAK) = ${valueAsArray.includes(
-              String.fromCharCode(0x15)
+            `valueAsArray.includes(NAK) = ${valueAsArray.findIndex(
+              (item) => item == 21
             )}`
           );
           completeResponse.push(...valueAsArray);
-          allCapturedValues.push(...valueAsArray);
 
           // FOREVER, this will add all responses stx-etx to allResponses array
           if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
@@ -208,10 +108,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             console.log("\nAll responses:");
             console.log(allResponses);
             console.log();
-
-            console.log("\nAll captured values:");
-            console.log(allCapturedValues);
-            console.log();
+            await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
             // await reader.cancel();
             // await reader.releaseLock();
             // return {
@@ -226,6 +123,109 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       }
     }
   };
+
+  // the below one is with checking EOT for every value that has been read
+  /**
+   * Keeps on reading the serial port until there's nothing to read or
+   *     end of transaction received, or some fatal error occured.
+   *
+   * @returns {ReadingSuccess | FunctionalityFailure}
+   */
+  // read = async () => {
+  //   const reader = this.device.readable.getReader();
+  //   let completeResponse = [];
+  //   const decoder = new TextDecoder();
+  //   const allResponses = [];
+  //   const allCapturedValues = [];
+
+  //   while (true) {
+  //     try {
+  //       const { value, done } = await reader.read();
+  //       const valueAsArray = Array.from(value);
+
+  //       if (done) {
+  //         console.log(this.device);
+  //         console.log(reader);
+  //         await reader.cancel();
+  //         await reader.releaseLock();
+  //         console.error(
+  //           "returning from done condition finish of read function"
+  //         );
+  //         return {
+  //           success: "Success at reading",
+  //           value: decoder.decode(Uint8Array.from(completeResponse)),
+  //         };
+  //       }
+
+  //       if (value) {
+  //         console.log("\nnew value read within read function  --->");
+  //         console.log(decoder.decode(Uint8Array.from(valueAsArray)));
+  //         console.log("\n");
+  //         console.log(
+  //           `valueAsArray.includes(EOT) = ${valueAsArray.findIndex(
+  //             (item) => item == 4
+  //           )}`
+  //         );
+  //         console.log(
+  //           `valueAsArray.includes(ACK) = ${valueAsArray.findIndex(
+  //             (item) => item == 6
+  //           )}`
+  //         );
+  //         console.log(
+  //           `valueAsArray.includes(NAK) = ${valueAsArray.findIndex(
+  //             (item) => item == 2
+  //           )}`
+  //         );
+  //         completeResponse.push(...valueAsArray);
+  //         allCapturedValues.push(...valueAsArray);
+
+  //         // FOREVER, this will add all responses stx-etx to allResponses array
+  //         if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
+  //           const indexBeforeETX = completeResponse.lastIndexOf(
+  //             this.PAX_CONSTANTS.ETX
+  //           );
+  //           const STXIndex = completeResponse.lastIndexOf(
+  //             this.PAX_CONSTANTS.STX
+  //           );
+  //           // console.warn(decoder.decode(Uint8Array.from(completeResponse)));
+  //           console.log(
+  //             "Complete response length BEFORE extraction using STX-ETX"
+  //           );
+  //           console.log(completeResponse.length);
+  //           console.log();
+  //           // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
+  //           completeResponse = completeResponse.slice(
+  //             STXIndex + 3,
+  //             indexBeforeETX
+  //           );
+  //           console.log(
+  //             "Complete response length AFTER extraction using STX-ETX"
+  //           );
+  //           console.log(completeResponse.length);
+  //           allResponses.push(
+  //             decoder.decode(Uint8Array.from(completeResponse))
+  //           );
+  //           console.log("\nAll responses:");
+  //           console.log(allResponses);
+  //           console.log();
+
+  //           console.log("\nAll captured values:");
+  //           console.log(allCapturedValues);
+  //           console.log();
+  //           // await reader.cancel();
+  //           // await reader.releaseLock();
+  //           // return {
+  //           //   success: "Success at reading",
+  //           //   value: decoder.decode(Uint8Array.from(completeResponse)),
+  //           // };
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("non fatal error occured");
+  //       return { error: error };
+  //     }
+  //   }
+  // };
 
   /**
    * Converts the number or string passed to it to its corresponding
