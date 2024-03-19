@@ -79,6 +79,14 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             )}`
           );
           completeResponse.push(...valueAsArray);
+          
+          if (EOTIndex >= 0) {
+            await reader.releaseLock();
+            return {
+              success: "Success at reading",
+              value: decoder.decode(Uint8Array.from(completeResponse)),
+            };
+          }
 
           // FOREVER, this will add all responses stx-etx to allResponses array
           if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
@@ -111,13 +119,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             console.log();
             await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
             // await reader.cancel();
-            if (EOTIndex >= 0) {
-              await reader.releaseLock();
-              return {
-                success: "Success at reading",
-                value: decoder.decode(Uint8Array.from(completeResponse)),
-              };
-            }
           }
         }
       } catch (error) {
