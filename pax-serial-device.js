@@ -414,7 +414,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
     if (response?.error) {
       console.log("error occured");
-      return { error: "Auth error" };
+      return { error: response.error };
     } else if (response?.failure) {
       console.log("Auth failed: " + response.responseMessage);
       return {
