@@ -126,6 +126,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     let completeResponse = [];
     const decoder = new TextDecoder();
     const allResponses = [];
+    const allCapturedValues = [];
 
     while (true) {
       try {
@@ -156,6 +157,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             )}`
           );
           completeResponse.push(...valueAsArray);
+          allCapturedValues.push(...valueAsArray);
 
           // FOREVER, this will add all responses stx-etx to allResponses array
           if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
@@ -185,6 +187,10 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             );
             console.log("\nAll responses:");
             console.log(allResponses);
+            console.log();
+
+            console.log("\nAll captured values:");
+            console.log(allCapturedValues);
             console.log();
             // await reader.cancel();
             // await reader.releaseLock();
