@@ -81,7 +81,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
           if (EOTIndex >= 0) {
             await reader.releaseLock();
-            console.log(Uint8Array.from(completeResponse));
+            console.log(Uint8Array.from(completeResponse).toString());
             console.log(decoder.decode(Uint8Array.from(completeResponse)));
             return {
               success: "Success at reading",
