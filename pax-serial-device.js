@@ -160,7 +160,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             // console.warn(decoder.decode(Uint8Array.from(completeResponse)));
             console.log("Complete response BEFORE extraction using STX-ETX");
             console.log(
-              Uint8Array(
+              new Uint8Array(
                 completeResponse.slice(STXIndex, ETXIndex + 2)
               ).toString()
             );
