@@ -78,16 +78,17 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
               (item) => item == 21
             )}`
           );
-          completeResponse.push(...valueAsArray);
-          
+
           if (EOTIndex >= 0) {
             await reader.releaseLock();
+            console.log(decoder.decode(Uint8Array.from(completeResponse)));
             return {
               success: "Success at reading",
               value: decoder.decode(Uint8Array.from(completeResponse)),
             };
           }
 
+          completeResponse.push(...valueAsArray);
           // FOREVER, this will add all responses stx-etx to allResponses array
           if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
             const indexBeforeETX = completeResponse.lastIndexOf(
