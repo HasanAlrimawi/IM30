@@ -741,7 +741,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
   clearBatch = async () => {
     let clearBatchCommand = new Uint8Array([
       this.PAX_CONSTANTS.STX,
-      0x62,
+      0x42,
       0x30,
       0x34,
       0x1c,
