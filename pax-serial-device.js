@@ -111,10 +111,10 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
             // await reader.cancel();
             await reader.releaseLock();
-            // return {
-            //   success: "Success at reading",
-            //   value: decoder.decode(Uint8Array.from(completeResponse)),
-            // };
+            return {
+              success: "Success at reading",
+              value: decoder.decode(Uint8Array.from(completeResponse)),
+            };
           }
         }
       } catch (error) {
