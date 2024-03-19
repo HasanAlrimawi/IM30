@@ -159,7 +159,11 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             );
             // console.warn(decoder.decode(Uint8Array.from(completeResponse)));
             console.log("Complete response BEFORE extraction using STX-ETX");
-            console.log(completeResponse.slice(STXIndex, ETXIndex + 2));
+            console.log(
+              Uint8Array(
+                completeResponse.slice(STXIndex, ETXIndex + 2)
+              ).toString()
+            );
             console.log(`LRC value = ${completeResponse[ETXIndex + 1]}`);
 
             // ToDo: check LRC is correct, if yes then update fullResponseReceived flag and send ack then wait for EOT,
