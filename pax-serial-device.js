@@ -38,6 +38,12 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     let completeResponse = [];
     const decoder = new TextDecoder();
     const allResponses = [];
+    let receivedACK = false;
+    let receivedNAK = false;
+    let fullResponseReceived = false;
+    const readingStartTime = new Date();
+    let timeRegisterSentACK = undefined;
+    let numberOfACKsRegisterSent = 0;
 
     while (true) {
       try {
@@ -62,6 +68,32 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           console.log("\nnew value read within read function  --->");
           console.log(decoder.decode(Uint8Array.from(valueAsArray)));
           console.log("\n");
+          // this if statement checks for ACK & NAK for 9 seconds
+          if (!receivedACK) {
+            timeWithoutACK = new Date() - readingStartTime;
+            receivedACK = valueAsArray.includes(this.PAX_CONSTANTS.ACK);
+            receivedNAK = valueAsArray.includes(this.PAX_CONSTANTS.NAK);
+            // checks if NAK received from terminal then it stops reading and
+            // the app should resend the command, then checks if ACK received
+            // from terminal so it can proceed with reading
+            if (receivedNAK) {
+              await reader.releaseLock();
+              return {
+                error:
+                  "terminal received corrupted command, check command and send again",
+                tryAgain: true,
+              };
+            } else if (!receivedACK && timeWithoutACK > 7000) {
+              await reader.releaseLock();
+              return {
+                error: "ack can not be recieved",
+                tryAgain: true,
+              };
+            } else if (!receivedACK) {
+              continue;
+            }
+          }
+
           const EOTIndex = valueAsArray.findIndex((item) => item == 4);
           console.log(
             `valueAsArray.includes(EOT) = ${valueAsArray.findIndex(
@@ -89,26 +121,49 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             };
           }
 
+          // checks if register sent ack, if yes then if it has been for more
+          // than 3 seconds and no EOT received then resend ack but if ack has
+          // been sent for more than 7 times then there's miscommunication
+          if (timeRegisterSentACK) {
+            const timeFromLastACKRegisterSent =
+              new Date() - timeRegisterSentACK;
+            if (numberOfACKsRegisterSent >= 7) {
+              await reader.releaseLock();
+              return {
+                error:
+                  "There's miscommunication, check communication and try again",
+                tryAgain: false,
+              };
+            }
+            if (timeFromLastACKRegisterSent >= 3000) {
+              await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
+              timeRegisterSentACK = new Date();
+              numberOfACKsRegisterSent++;
+            }
+          }
+
           completeResponse.push(...valueAsArray);
           // FOREVER, this will add all responses stx-etx to allResponses array
-          if (completeResponse.includes(this.PAX_CONSTANTS.ETX)) {
-            const indexBeforeETX = completeResponse.lastIndexOf(
+          if (
+            completeResponse.includes(this.PAX_CONSTANTS.ETX) &&
+            !fullResponseReceived
+          ) {
+            const ETXIndex = completeResponse.lastIndexOf(
               this.PAX_CONSTANTS.ETX
             );
             const STXIndex = completeResponse.lastIndexOf(
               this.PAX_CONSTANTS.STX
             );
             // console.warn(decoder.decode(Uint8Array.from(completeResponse)));
-            console.log(
-              "Complete response length BEFORE extraction using STX-ETX"
-            );
-            console.log(completeResponse.length);
-            console.log();
+            console.log("Complete response BEFORE extraction using STX-ETX");
+            console.log(completeResponse.slice(STXIndex, ETXIndex + 2));
+            console.log(`LRC value = ${completeResponse[ETXIndex + 1]}`);
+
+            // ToDo: check LRC is correct, if yes then update fullResponseReceived flag and send ack then wait for EOT,
+            //    if not then send NAK and clear the completeResponse variable
+
             // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
-            completeResponse = completeResponse.slice(
-              STXIndex + 3,
-              indexBeforeETX
-            );
+            completeResponse = completeResponse.slice(STXIndex + 3, ETXIndex);
             console.log(
               "Complete response length AFTER extraction using STX-ETX"
             );
@@ -120,12 +175,16 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             console.log(allResponses);
             console.log();
             await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
+            timeRegisterSentACK = new Date();
+            numberOfACKsRegisterSent++;
+            fullResponseReceived = true; // to be deleted when lrc checking is added
             // await reader.cancel();
           }
         }
       } catch (error) {
         console.error("non fatal error occured");
-        return { error: error };
+        console.log(error);
+        return { error: error, tryAgain: false };
       }
     }
   };
