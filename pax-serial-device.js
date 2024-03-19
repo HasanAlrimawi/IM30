@@ -110,7 +110,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             console.log();
             await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
             // await reader.cancel();
-            // await reader.releaseLock();
+            await reader.releaseLock();
             // return {
             //   success: "Success at reading",
             //   value: decoder.decode(Uint8Array.from(completeResponse)),
@@ -426,56 +426,56 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         response.traceInformation.split(String.fromCharCode(0x1f))[0]
       }`
     );
-    // doCreditFields.saleTransactionType = [0x30, 0x34];
-    // doCreditFields.requestTraceInformation = [
-    //   this.ECR_REFERENCE_NUMBER,
-    //   0x1f,
-    //   0x1f,
-    //   0x1f,
-    //   ...[
-    //     0x30,
-    //     0x30,
-    //     0x30,
-    //     ...Array.from(
-    //       this.#convertToUint8Array(
-    //         response.traceInformation.split(String.fromCharCode(0x1f))[0]
-    //       )
-    //     ),
-    //   ],
-    // ];
-    // const zero = [0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30];
-    // doCreditFields.requestAmountInformation = [
-    //   ...amount,
-    //   0x1f,
-    //   ...zero,
-    //   0x1f,
-    //   0x1f,
-    //   0x1f,
-    //   ...zero,
-    // ];
-    // function delay(ms) {
-    //   return new Promise((resolve) => {
-    //     setTimeout(resolve, ms);
-    //   });
-    // }
-    // console.log("Before delay");
-    // await delay(10000);
-    // console.log("After delay");
-    // response = await this.doCredit(doCreditFields);
-    // console.log(response);
+    doCreditFields.saleTransactionType = [0x30, 0x34];
+    doCreditFields.requestTraceInformation = [
+      this.ECR_REFERENCE_NUMBER,
+      0x1f,
+      0x1f,
+      0x1f,
+      ...[
+        0x30,
+        0x30,
+        0x30,
+        ...Array.from(
+          this.#convertToUint8Array(
+            response.traceInformation.split(String.fromCharCode(0x1f))[0]
+          )
+        ),
+      ],
+    ];
+    const zero = [0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30];
+    doCreditFields.requestAmountInformation = [
+      ...amount,
+      0x1f,
+      ...zero,
+      0x1f,
+      0x1f,
+      0x1f,
+      ...zero,
+    ];
+    function delay(ms) {
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    }
+    console.log("Before delay");
+    await delay(10000);
+    console.log("After delay");
+    response = await this.doCredit(doCreditFields);
+    console.log(response);
 
-    // if (response?.error) {
-    //   console.log("error occured");
-    //   return { error: "PostAuth error" };
-    // } else if (response?.failure) {
-    //   console.log("PostAuth failed");
-    //   return {
-    //     failure: response.responseMessage,
-    //   };
-    // }
-    // return {
-    //   success: response.responseMessage,
-    // };
+    if (response?.error) {
+      console.log("error occured");
+      return { error: "PostAuth error" };
+    } else if (response?.failure) {
+      console.log("PostAuth failed");
+      return {
+        failure: response.responseMessage,
+      };
+    }
+    return {
+      success: response.responseMessage,
+    };
   };
 
   doCredit = async (doCreditRequestOptions) => {
