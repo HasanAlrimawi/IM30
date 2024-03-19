@@ -62,6 +62,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           console.log("\nnew value read within read function  --->");
           console.log(decoder.decode(Uint8Array.from(valueAsArray)));
           console.log("\n");
+          const EOTIndex = valueAsArray.findIndex((item) => item == 6);
           console.log(
             `valueAsArray.includes(EOT) = ${valueAsArray.findIndex(
               (item) => item == 4
@@ -110,11 +111,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             console.log();
             await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
             // await reader.cancel();
-            await reader.releaseLock();
-            return {
-              success: "Success at reading",
-              value: decoder.decode(Uint8Array.from(completeResponse)),
-            };
+            if (EOTIndex >= 0) {
+              await reader.releaseLock();
+              return {
+                success: "Success at reading",
+                value: decoder.decode(Uint8Array.from(completeResponse)),
+              };
+            }
           }
         }
       } catch (error) {
