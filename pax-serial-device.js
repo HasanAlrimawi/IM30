@@ -70,7 +70,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           console.log("\n");
           // this if statement checks for ACK & NAK for 9 seconds
           if (!receivedACK) {
-            timeWithoutACK = new Date() - readingStartTime;
+            const timeWithoutACK = new Date() - readingStartTime;
             receivedACK = valueAsArray.includes(this.PAX_CONSTANTS.ACK);
             receivedNAK = valueAsArray.includes(this.PAX_CONSTANTS.NAK);
             console.log(
