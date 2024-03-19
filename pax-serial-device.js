@@ -73,6 +73,15 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             timeWithoutACK = new Date() - readingStartTime;
             receivedACK = valueAsArray.includes(this.PAX_CONSTANTS.ACK);
             receivedNAK = valueAsArray.includes(this.PAX_CONSTANTS.NAK);
+            console.log(
+              `-------------- Time without ACK: ${timeWithoutACK} --------------`
+            );
+            console.log(
+              `-------------- Checking for ACK: ${receivedACK} --------------`
+            );
+            console.log(
+              `-------------- Checking for NAK: ${receivedNAK} --------------`
+            );
             // checks if NAK received from terminal then it stops reading and
             // the app should resend the command, then checks if ACK received
             // from terminal so it can proceed with reading
@@ -94,22 +103,10 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             }
           }
 
-          const EOTIndex = valueAsArray.findIndex((item) => item == 4);
-          console.log(
-            `valueAsArray.includes(EOT) = ${valueAsArray.findIndex(
-              (item) => item == 4
-            )}`
+          const EOTIndex = valueAsArray.findIndex(
+            (item) => item == this.PAX_CONSTANTS.EOT
           );
-          console.log(
-            `valueAsArray.includes(ACK) = ${valueAsArray.findIndex(
-              (item) => item == 6
-            )}`
-          );
-          console.log(
-            `valueAsArray.includes(NAK) = ${valueAsArray.findIndex(
-              (item) => item == 21
-            )}`
-          );
+          console.log(`-------------- EOT index: ${EOTIndex} --------------`);
 
           if (EOTIndex >= 0) {
             await reader.releaseLock();
@@ -127,6 +124,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           if (timeRegisterSentACK) {
             const timeFromLastACKRegisterSent =
               new Date() - timeRegisterSentACK;
+            console.log(
+              `-------------- timeFromLastACKRegisterSent: ${timeFromLastACKRegisterSent} --------------`
+            );
             if (numberOfACKsRegisterSent >= 7) {
               await reader.releaseLock();
               return {
@@ -140,6 +140,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
               timeRegisterSentACK = new Date();
               numberOfACKsRegisterSent++;
             }
+            console.log(
+              `-------------- numberOfACKsRegisterSent: ${numberOfACKsRegisterSent} --------------`
+            );
           }
 
           completeResponse.push(...valueAsArray);
@@ -389,8 +392,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         licenseExpiry,
       };
     } else if (response?.error) {
-      console.log("try again, miscommunication occured. Error is: ");
-      console.log(response.error);
+      console.log("Init failed, Error is: ");
+      console.log(response);
       return {
         error: "error",
       };
@@ -645,7 +648,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           hostCredentialInformation,
         };
       } else {
-        console.log(response);
         console.log("Do credit Failure");
         return {
           failure: "",
@@ -654,10 +656,10 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         };
       }
     } else if (response?.error) {
-      console.log("Couldn't do credit, error");
+      console.log("Couldn't do credit, Error is:");
+      console.log(response);
       return { error: response.error };
     }
-    console.log(response);
   };
 
   getInputAccount = async () => {
@@ -765,7 +767,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     showMessageCommand = this.#lrcAppender(showMessageCommand);
     await this.write(showMessageCommand);
     const response = await this.read();
-    console.log(`response: ${response}`);
+    console.log(`Show message response: `);
+    console.log(response);
     if (response?.success) {
       const [command, version, responseCode, responseMessage] =
         response.value.split(String.fromCharCode(0x1c));
@@ -818,6 +821,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     clearBatchCommand = this.#lrcAppender(clearBatchCommand);
     await this.write(clearBatchCommand);
     const response = await this.read();
+    console.log("Clear batch response");
     console.log(response);
   };
 }
