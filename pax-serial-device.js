@@ -441,12 +441,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     // [1f] means <US> which is the separator of the request amount information
     amount = this.#convertToUint8Array(amount);
     amount = Array.from(amount);
-    amount = [...amount, 0x30, 0x30];
-    const numOfTimes = 9 - amount.length;
+    amount = [...amount];
+    // const numOfTimes = 9 - amount.length;
 
-    for (let x = 0; x < numOfTimes; x++) {
-      amount.unshift(0x30);
-    }
+    // for (let x = 0; x < numOfTimes; x++) {
+    //   amount.unshift(0x30);
+    // }
+
     // const requestAmountInformation = new Uint8Array([
     //   ...amount,
     //   0x1f,
