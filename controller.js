@@ -22,6 +22,8 @@ const pay = async (event) => {
   console.log(response);
 
   if (response.success) {
+    console.log(response.traceInformation);
+    console.log(response.accountInformation);
     responseStatusUIHolder.textContent = `Payment status: ${
       response.responseCode == "000000" ? "Success" : "failure"
     }

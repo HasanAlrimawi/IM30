@@ -508,14 +508,14 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1f,
       ...zero,
     ];
-    function delay(ms) {
-      return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-      });
-    }
-    console.log("Before delay");
-    await delay(10000);
-    console.log("After delay");
+    // function delay(ms) {
+    //   return new Promise((resolve) => {
+    //     setTimeout(resolve, ms);
+    //   });
+    // }
+    // console.log("Before delay");
+    // await delay(10000);
+    // console.log("After delay");
     response = await this.doCredit(doCreditFields);
     console.log(response);
 
