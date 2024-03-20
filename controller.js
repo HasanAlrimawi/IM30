@@ -80,6 +80,7 @@ const clearBatch = async () => {
   const responseStatusUIHolder = document.getElementById("response-holder");
   responseStatusUIHolder.textContent = "Clearing batch pending...";
   const response = await paxInstance.clearBatch();
+  console.log(response);
 
   if (response.success) {
     responseStatusUIHolder.textContent = `Clear batch status: ${

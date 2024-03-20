@@ -810,6 +810,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     if (response?.success) {
       const [command, version, responseCode, responseMessage] =
         response.value.split(String.fromCharCode(0x1c));
+      console.log("CLEAR BATCH: I'm returning success");
       return {
         success: "",
         responseCode: responseCode,
