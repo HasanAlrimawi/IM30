@@ -29,15 +29,15 @@ const pay = async (event) => {
     const transactionTime = parseDateTime(response.traceInformation[2]);
     responseStatusUIHolder.textContent = `Payment status: ${
       response.responseCode == "000000" ? "Success" : "failure"
-    }
-  Command response message: ${response.responseMessage}
-  Card holder expiry date: ${response.accountInformation[2]}
-  Transaction date: ${transactionTime.date}
-  Transaction time: ${transactionTime.time}`;
+    }\nCommand response message: ${
+      response.responseMessage
+    }\nCard holder expiry date: ${
+      response.accountInformation[2]
+    }\nTransaction date: ${transactionTime.date}\nTransaction time: ${
+      transactionTime.time
+    }\nTransaction amount: ${response.amountInformation[0]}`;
   } else {
-    responseStatusUIHolder.textContent = `Payment status: Failure
-    Failure stage: ${response.stage}
-    Error: ${response.error}`;
+    responseStatusUIHolder.textContent = `Payment status: Failure\nFailure stage: ${response.stage}\nError: ${response.error}`;
   }
 };
 
@@ -65,11 +65,9 @@ const initialize = async () => {
   if (response.success) {
     responseStatusUIHolder.textContent = `Initialization status: ${
       response.responseCode == "000000" ? "Success" : "failure"
-    }
-    Command response message: ${response.responseMessage}`;
+    }\nCommand response message: ${response.responseMessage}`;
   } else {
-    responseStatusUIHolder.textContent = `Initialization status: Failure
-    Error: ${response.error}`;
+    responseStatusUIHolder.textContent = `Initialization status: Failure\nError: ${response.error}`;
   }
 };
 
@@ -85,11 +83,9 @@ const showMessage = async () => {
   if (response.success) {
     responseStatusUIHolder.textContent = `Show message status: ${
       response.responseCode == "000000" ? "Success" : "failure"
-    }
-    Command response message: ${response.responseMessage}`;
+    }\nCommand response message: ${response.responseMessage}`;
   } else {
-    responseStatusUIHolder.textContent = `Show message status: Failure
-    Error: ${response.error}`;
+    responseStatusUIHolder.textContent = `Show message status: Failure\nError: ${response.error}`;
   }
 };
 
@@ -106,11 +102,9 @@ const clearBatch = async () => {
   if (response.success) {
     responseStatusUIHolder.textContent = `Clear batch status: ${
       response.responseCode == "000000" ? "Success" : "failure"
-    }
-    Command response message: ${response.responseMessage}`;
+    }\nCommand response message: ${response.responseMessage}`;
   } else {
-    responseStatusUIHolder.textContent = `Clear batch status: Failure
-    Error: ${response.error}`;
+    responseStatusUIHolder.textContent = `Clear batch status: Failure\nError: ${response.error}`;
   }
 };
 

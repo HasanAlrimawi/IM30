@@ -540,6 +540,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       accountInformation: response.accountInformation.split(
         String.fromCharCode(0x1f)
       ),
+      amountInformation: response.amountInformation.split(
+        String.fromCharCode(0x1f)
+      ),
     };
   };
 
