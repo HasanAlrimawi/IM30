@@ -87,6 +87,7 @@ export class BaseDeviceSerialDriver {
   };
 
   write = async (data) => {
+    // TODO: Wrap with tryCatch
     const writer = this.device.writable.getWriter();
     console.log("started sending to terminal");
     await writer.write(data);

@@ -385,7 +385,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       console.log("Init failed, Error is: ");
       console.log(response);
       return {
-        error: "error",
+        error: response.error,
       };
     }
   };
@@ -468,11 +468,12 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     if (response?.error) {
       console.log("error occured");
       console.log(response.error);
-      return { error: response.error };
-    } else if (response?.failure) {
+      return { error: response.error, stage: "Auth" };
+    } else if (response?.responseCode != "000000") {
       console.log("Auth failed: " + response.responseMessage);
       return {
-        failure: response.responseMessage,
+        error: response.responseMessage,
+        stage: "Auth",
       };
     }
     console.log(
@@ -520,15 +521,24 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
     if (response?.error) {
       console.log("error occured");
-      return { error: "PostAuth error" };
-    } else if (response?.failure) {
+      return { error: response.error, stage: "Post Auth" };
+    } else if (response?.responseCode != "000000") {
       console.log("PostAuth failed");
       return {
-        failure: response.responseMessage,
+        error: response.responseMessage,
+        stage: "Post Auth",
       };
     }
     return {
       success: response.responseMessage,
+      responseCode: response.responseCode,
+      responseMessage: response.responseMessage,
+      traceInformation: response.traceInformation.split(
+        String.fromCharCode(0x1f)
+      ),
+      accountInformation: response.accountInformation.split(
+        String.fromCharCode(0x1f)
+      ),
     };
   };
 
@@ -613,33 +623,24 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           .split(String.fromCharCode(0x1c))[4]
           .split(String.fromCharCode(0x1f))
       );
-      if (responseCode == "000000") {
-        return {
-          success: "success",
-          responseCode,
-          responseMessage,
-          accountInformation,
-          amountInformation,
-          transactionType,
-          hostInformation,
-          traceInformation,
-          AVSInformation,
-          commercialInfomration,
-          eCommerce,
-          additionalInformation,
-          VASInfromation,
-          TORInformation,
-          payloadData,
-          hostCredentialInformation,
-        };
-      } else {
-        console.log("Do credit Failure");
-        return {
-          failure: "",
-          responseCode,
-          responseMessage,
-        };
-      }
+      return {
+        success: "success",
+        responseCode,
+        responseMessage,
+        accountInformation,
+        amountInformation,
+        transactionType,
+        hostInformation,
+        traceInformation,
+        AVSInformation,
+        commercialInfomration,
+        eCommerce,
+        additionalInformation,
+        VASInfromation,
+        TORInformation,
+        payloadData,
+        hostCredentialInformation,
+      };
     } else if (response?.error) {
       console.log("Couldn't do credit, Error is:");
       console.log(response);
@@ -760,8 +761,16 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       console.log(
         `Show message command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
+      return {
+        success: "",
+        responseCode: responseCode,
+        responseMessage: responseMessage,
+      };
     } else if (response?.error) {
       console.log("Couldn't show message");
+      return {
+        error: response.error,
+      };
     }
   };
 
@@ -797,5 +806,19 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     const response = await this.read();
     console.log("Clear batch response");
     console.log(response);
+
+    if (response?.success) {
+      const [command, version, responseCode, responseMessage] =
+        response.value.split(String.fromCharCode(0x1c));
+      return {
+        success: "",
+        responseCode: responseCode,
+        responseMessage: responseMessage,
+      };
+    } else if (response?.error) {
+      return {
+        error: response.error,
+      };
+    }
   };
 }

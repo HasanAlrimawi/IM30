@@ -2,34 +2,52 @@
 <html>
   <head>
     <script type="module" src="controller.js"></script>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body
-    style="
+    style="padding-top: 20px;
       display: flex;
       flex-direction: column;
       gap: 20px;
-      background-color: dimgrey;
+      background-color: wheat;
+      justify-content: center;
+      align-items: center;
     "
   >
     <input type="button" id="connect" value="Connect Device" />
-    <form id="pay-form">
+    <form
+      id="pay-form"
+      style="
+        display: flex;
+        gap: 20px;
+        flex-direction: column;
+        width: fit-content;
+        justify-content: center;
+        align-items: center;
+      "
+    >
       <div style="display: flex; gap: 10px">
         <label for="amount">Amount</label>
         <input type="number" name="amount" required id="amount" />
       </div>
-      <div style="display: flex; gap: 10px">
-        <label for="pay">Press pay</label>
-        <input type="submit" name="pay" id="pay-button" value="Pay here" />
-      </div>
+      <input type="submit" name="pay" id="pay-button" value="Pay here" />
       <input type="button" id="initialize-button" value="Initialize" />
-      <input type="button" id="show-message-button" value="Show message" />
       <input
+        type="button"
+        id="show-message-button"
+        value="Show message on terminal"
+      />
+      <!-- <input
         type="button"
         id="get-input-account-button"
         value="Get Input Account"
         title="Collect customer card details"
-      />
+      /> -->
       <input type="button" id="clear-batch" value="Clear batch" />
+
+      <div>
+        <textarea name="" id="response-holder" cols="30" rows="6"></textarea>
+      </div>
     </form>
   </body>
 </html>

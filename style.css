@@ -1,0 +1,31 @@
+:root {
+  --bar-background-color: #e6e6e6;
+  --main-color: #f4f4f4;
+  --subtitle-color: #3e3e3e;
+  --label-color: #777;
+  --white-to-black: #fff;
+  --black-to-white: #333333;
+  --button-background-color: #007bff;
+  --button-hover-background-color: #0056b3;
+  --button-disabled-color: #6db1fb;
+}
+
+input[type="button"],
+input[type="submit"] {
+  background-color: var(--button-background-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-align: center;
+  min-width: 220px;
+  width: fit-content;
+}
+
+input[type="button"]:hover,
+input[type="submit"]:hover {
+  background-color: var(--button-hover-background-color);
+}
