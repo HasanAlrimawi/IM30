@@ -35,7 +35,7 @@ const pay = async (event) => {
       response.accountInformation[2]
     }\nTransaction date: ${transactionTime.date}\nTransaction time: ${
       transactionTime.time
-    }\nTransaction amount: ${response.amountInformation[0]}`;
+    }\nTransaction amount: ${parseInt(response.amountInformation[0]) / 100}$`;
   } else {
     responseStatusUIHolder.textContent = `Payment status: Failure\nFailure stage: ${response.stage}\nError: ${response.error}`;
   }
