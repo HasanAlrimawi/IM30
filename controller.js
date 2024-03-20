@@ -26,18 +26,36 @@ const pay = async (event) => {
     console.log(response.traceInformation[2]); //time of transaction
     console.log(response.accountInformation[2]); //expiry date
     console.log(response.accountInformation);
+    const transactionTime = parseDateTime(response.traceInformation[2]);
     responseStatusUIHolder.textContent = `Payment status: ${
       response.responseCode == "000000" ? "Success" : "failure"
     }
   Command response message: ${response.responseMessage}
   Card holder expiry date: ${response.accountInformation[2]}
-  Transaction time: ${response.traceInformation[2]}`;
+  Transaction date: ${transactionTime.date}
+  Transaction time: ${transactionTime.time}`;
   } else {
     responseStatusUIHolder.textContent = `Payment status: Failure
     Failure stage: ${response.stage}
     Error: ${response.error}`;
   }
 };
+
+function parseDateTime(dateTimeString) {
+  // Extract date and time components
+  const year = dateTimeString.substring(0, 4);
+  const month = dateTimeString.substring(4, 6);
+  const day = dateTimeString.substring(6, 8);
+  const hours = dateTimeString.substring(8, 10);
+  const minutes = dateTimeString.substring(10, 12);
+  const seconds = dateTimeString.substring(12, 14);
+
+  // Log the parsed date and time components
+  return {
+    date: `${year}/${month}/${day}`,
+    time: `${hours}:${minutes}:${seconds}`,
+  };
+}
 
 const initialize = async () => {
   const responseStatusUIHolder = document.getElementById("response-holder");
