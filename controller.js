@@ -23,12 +23,15 @@ const pay = async (event) => {
 
   if (response.success) {
     console.log(response.traceInformation);
+    console.log(response.traceInformation[2]); //time of transaction
+    console.log(response.accountInformation[2]); //expiry date
     console.log(response.accountInformation);
     responseStatusUIHolder.textContent = `Payment status: ${
       response.responseCode == "000000" ? "Success" : "failure"
     }
   Command response message: ${response.responseMessage}
-  Card holder name: ${response.accountInformation[7]}`;
+  Card holder expiry date: ${response.accountInformation[2]}
+  Transaction time: ${response.traceInformation[2]}`;
   } else {
     responseStatusUIHolder.textContent = `Payment status: Failure
     Failure stage: ${response.stage}

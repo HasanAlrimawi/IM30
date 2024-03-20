@@ -762,7 +762,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         `Show message command:\nResponse code: ${responseCode}\nResponseMessage: ${responseMessage}\n\n`
       );
       return {
-        success: "",
+        success: true,
         responseCode: responseCode,
         responseMessage: responseMessage,
       };
@@ -812,7 +812,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         response.value.split(String.fromCharCode(0x1c));
       console.log("CLEAR BATCH: I'm returning success");
       return {
-        success: "",
+        success: true,
         responseCode: responseCode,
         responseMessage: responseMessage,
       };
