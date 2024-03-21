@@ -643,7 +643,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         )
       )
     );
-    const zero = [0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30];
+    const zero = [0x30];
     doCreditFields.requestAmountInformation = [
       ...amount,
       0x1f,
