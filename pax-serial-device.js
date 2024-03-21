@@ -12,7 +12,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       EOT: 0x04,
     };
     this.PROTOCOL_VERSION = new Uint8Array([0x31, 0x2e, 0x34, 0x33]);
-    this.ECR_REFERENCE_NUMBER = 0x31;
+    this.ECR_REFERENCE_NUMBER = 0x01;
     this.paymentGateway = trustCommerceAPIs;
   }
   PAX_CONSTANTS;
