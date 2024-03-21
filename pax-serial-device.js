@@ -799,10 +799,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       ,
     ];
     console.log(
-      ...Array.from(
-        this.#convertToUint8Array(
-          response.traceInformation.split(String.fromCharCode(0x1f))[0]
-        )
+      this.#convertToUint8Array(
+        response.traceInformation.split(String.fromCharCode(0x1f))[0]
+      )
+    );
+    console.log(
+      this.#convertToUint8Array(
+        response.traceInformation.split(String.fromCharCode(0x1f))
       )
     );
     const zero = [0x30];
