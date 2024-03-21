@@ -900,6 +900,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       doCreditRequestArray.filter((element) => element !== "na")
     );
     doCreditRequest = this.#lrcAppender(doCreditRequest);
+    console.log(doCreditRequest);
     await this.write(doCreditRequest);
     const response = await this.read();
 
