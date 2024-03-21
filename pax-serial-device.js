@@ -146,6 +146,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
               };
             }
             if (timeFromLastACKRegisterSent >= 3000) {
+              console.log("it has been more than 3 seconds");
               await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
               timeRegisterSentACK = new Date();
               numberOfACKsRegisterSent++;
@@ -188,12 +189,12 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             //   fullResponseReceived = false;
             //   continue;
             // }
-            if (completeResponse[STXIndex + 1] == 0x31) {
-              allResponsesExtracted.push(
-                ...completeResponse.slice(STXIndex + 3, ETXIndex)
-              );
-              await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
-            }
+            // if (completeResponse[STXIndex + 1] == 0x31) {
+            //   allResponsesExtracted.push(
+            //     ...completeResponse.slice(STXIndex + 3, ETXIndex)
+            //   );
+            //   await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
+            // }
             // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
             completeResponse = completeResponse.slice(STXIndex + 3, ETXIndex);
             console.log(
