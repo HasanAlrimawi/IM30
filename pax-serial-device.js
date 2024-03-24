@@ -582,11 +582,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
    */
   isResponseCorrupt = (response) => {
     const responseWithCorrectLRC = this.#lrcAppender(
-      new Uint8Array(response.slice(0, response.length - 1))
+      Uint8Array.from(response.slice(0, response.length - 1))
     );
     console.log(
       JSON.stringify(response) === JSON.stringify(responseWithCorrectLRC)
     );
+    console.log(responseWithCorrectLRC.toString());
+    console.log(Uint8Array.from(response));
     console.log(response.indexOf(0x1c));
     if (JSON.stringify(response) === JSON.stringify(responseWithCorrectLRC)) {
       if (response.indexOf(0x1c) !== 2) {
