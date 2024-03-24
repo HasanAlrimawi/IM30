@@ -32,172 +32,172 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     }
   };
 
-  read = async () => {
-    const reader = this.device.readable.getReader();
-    let completeResponse = [];
-    const decoder = new TextDecoder();
-    const allResponses = [];
-    let receivedACK = false;
-    let receivedNAK = false;
-    let fullResponseReceived = false;
-    const readingStartTime = new Date();
-    let timeRegisterSentACK = undefined;
-    let numberOfACKsRegisterSent = 0;
+  // read = async () => {
+  //   const reader = this.device.readable.getReader();
+  //   let completeResponse = [];
+  //   const decoder = new TextDecoder();
+  //   const allResponses = [];
+  //   let receivedACK = false;
+  //   let receivedNAK = false;
+  //   let fullResponseReceived = false;
+  //   const readingStartTime = new Date();
+  //   let timeRegisterSentACK = undefined;
+  //   let numberOfACKsRegisterSent = 0;
 
-    while (true) {
-      try {
-        const { value, done } = await reader.read();
-        const valueAsArray = Array.from(value);
+  //   while (true) {
+  //     try {
+  //       const { value, done } = await reader.read();
+  //       const valueAsArray = Array.from(value);
 
-        if (done) {
-          console.log(this.device);
-          console.log(reader);
-          await reader.cancel();
-          await reader.releaseLock();
-          console.error(
-            "returning from done condition finish of read function"
-          );
-          return {
-            success: "Success at reading",
-            value: decoder.decode(Uint8Array.from(completeResponse)),
-          };
-        }
+  //       if (done) {
+  //         console.log(this.device);
+  //         console.log(reader);
+  //         await reader.cancel();
+  //         await reader.releaseLock();
+  //         console.error(
+  //           "returning from done condition finish of read function"
+  //         );
+  //         return {
+  //           success: "Success at reading",
+  //           value: decoder.decode(Uint8Array.from(completeResponse)),
+  //         };
+  //       }
 
-        if (value) {
-          console.log("\nnew value read within read function  --->");
-          console.log(decoder.decode(Uint8Array.from(valueAsArray)));
-          console.log("\n");
-          // this if statement checks for ACK & NAK for 9 seconds
-          if (!receivedACK) {
-            const timeWithoutACK = new Date() - readingStartTime;
-            receivedACK = valueAsArray.includes(this.PAX_CONSTANTS.ACK);
-            receivedNAK = valueAsArray.includes(this.PAX_CONSTANTS.NAK);
-            console.log(
-              `-------------- Time without ACK: ${timeWithoutACK} --------------`
-            );
-            console.log(
-              `-------------- Checking for ACK: ${receivedACK} --------------`
-            );
-            console.log(
-              `-------------- Checking for NAK: ${receivedNAK} --------------`
-            );
-            // checks if NAK received from terminal then it stops reading and
-            // the app should resend the command, then checks if ACK received
-            // from terminal so it can proceed with reading
-            if (receivedNAK) {
-              await reader.releaseLock();
-              return {
-                error:
-                  "terminal received corrupted command, check command and send again",
-                tryAgain: true,
-              };
-            } else if (!receivedACK && timeWithoutACK > 7000) {
-              await reader.releaseLock();
-              return {
-                error: "ack can not be recieved",
-                tryAgain: true,
-              };
-            } else if (!receivedACK) {
-              continue;
-            }
-          }
+  //       if (value) {
+  //         console.log("\nnew value read within read function  --->");
+  //         console.log(decoder.decode(Uint8Array.from(valueAsArray)));
+  //         console.log("\n");
+  //         // this if statement checks for ACK & NAK for 9 seconds
+  //         if (!receivedACK) {
+  //           const timeWithoutACK = new Date() - readingStartTime;
+  //           receivedACK = valueAsArray.includes(this.PAX_CONSTANTS.ACK);
+  //           receivedNAK = valueAsArray.includes(this.PAX_CONSTANTS.NAK);
+  //           console.log(
+  //             `-------------- Time without ACK: ${timeWithoutACK} --------------`
+  //           );
+  //           console.log(
+  //             `-------------- Checking for ACK: ${receivedACK} --------------`
+  //           );
+  //           console.log(
+  //             `-------------- Checking for NAK: ${receivedNAK} --------------`
+  //           );
+  //           // checks if NAK received from terminal then it stops reading and
+  //           // the app should resend the command, then checks if ACK received
+  //           // from terminal so it can proceed with reading
+  //           if (receivedNAK) {
+  //             await reader.releaseLock();
+  //             return {
+  //               error:
+  //                 "terminal received corrupted command, check command and send again",
+  //               tryAgain: true,
+  //             };
+  //           } else if (!receivedACK && timeWithoutACK > 7000) {
+  //             await reader.releaseLock();
+  //             return {
+  //               error: "ack can not be recieved",
+  //               tryAgain: true,
+  //             };
+  //           } else if (!receivedACK) {
+  //             continue;
+  //           }
+  //         }
 
-          const EOTIndex = valueAsArray.findIndex(
-            (item) => item == this.PAX_CONSTANTS.EOT
-          );
-          console.log(`-------------- EOT index: ${EOTIndex} --------------`);
+  //         const EOTIndex = valueAsArray.findIndex(
+  //           (item) => item == this.PAX_CONSTANTS.EOT
+  //         );
+  //         console.log(`-------------- EOT index: ${EOTIndex} --------------`);
 
-          if (EOTIndex >= 0) {
-            await reader.releaseLock();
-            console.log(completeResponse.includes(0x00));
-            completeResponse = completeResponse.filter(
-              (character) => character !== 0x00
-            );
-            console.log(completeResponse.includes(0x00));
-            console.log(Uint8Array.from(completeResponse).toString());
-            console.log(decoder.decode(Uint8Array.from(completeResponse)));
-            return {
-              success: "Success at reading",
-              value: decoder.decode(Uint8Array.from(completeResponse)),
-            };
-          }
+  //         if (EOTIndex >= 0) {
+  //           await reader.releaseLock();
+  //           console.log(completeResponse.includes(0x00));
+  //           completeResponse = completeResponse.filter(
+  //             (character) => character !== 0x00
+  //           );
+  //           console.log(completeResponse.includes(0x00));
+  //           console.log(Uint8Array.from(completeResponse).toString());
+  //           console.log(decoder.decode(Uint8Array.from(completeResponse)));
+  //           return {
+  //             success: "Success at reading",
+  //             value: decoder.decode(Uint8Array.from(completeResponse)),
+  //           };
+  //         }
 
-          // checks if register sent ack, if yes then if it has been for more
-          // than 3 seconds and no EOT received then resend ack but if ack has
-          // been sent for more than 7 times then there's miscommunication
-          if (timeRegisterSentACK) {
-            const timeFromLastACKRegisterSent =
-              new Date() - timeRegisterSentACK;
-            console.log(
-              `-------------- timeFromLastACKRegisterSent: ${timeFromLastACKRegisterSent} --------------`
-            );
-            if (numberOfACKsRegisterSent >= 7) {
-              await reader.releaseLock();
-              return {
-                error:
-                  "There's miscommunication, check communication and try again",
-                tryAgain: false,
-              };
-            }
-            if (timeFromLastACKRegisterSent >= 3000) {
-              await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
-              timeRegisterSentACK = new Date();
-              numberOfACKsRegisterSent++;
-            }
-            console.log(
-              `-------------- numberOfACKsRegisterSent: ${numberOfACKsRegisterSent} --------------`
-            );
-          }
+  //         // checks if register sent ack, if yes then if it has been for more
+  //         // than 3 seconds and no EOT received then resend ack but if ack has
+  //         // been sent for more than 7 times then there's miscommunication
+  //         if (timeRegisterSentACK) {
+  //           const timeFromLastACKRegisterSent =
+  //             new Date() - timeRegisterSentACK;
+  //           console.log(
+  //             `-------------- timeFromLastACKRegisterSent: ${timeFromLastACKRegisterSent} --------------`
+  //           );
+  //           if (numberOfACKsRegisterSent >= 7) {
+  //             await reader.releaseLock();
+  //             return {
+  //               error:
+  //                 "There's miscommunication, check communication and try again",
+  //               tryAgain: false,
+  //             };
+  //           }
+  //           if (timeFromLastACKRegisterSent >= 3000) {
+  //             await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
+  //             timeRegisterSentACK = new Date();
+  //             numberOfACKsRegisterSent++;
+  //           }
+  //           console.log(
+  //             `-------------- numberOfACKsRegisterSent: ${numberOfACKsRegisterSent} --------------`
+  //           );
+  //         }
 
-          completeResponse.push(...valueAsArray);
-          // FOREVER, this will add all responses stx-etx to allResponses array
-          if (
-            completeResponse.includes(this.PAX_CONSTANTS.ETX) &&
-            !fullResponseReceived
-          ) {
-            const ETXIndex = completeResponse.lastIndexOf(
-              this.PAX_CONSTANTS.ETX
-            );
-            const STXIndex = completeResponse.lastIndexOf(
-              this.PAX_CONSTANTS.STX
-            );
-            // console.warn(decoder.decode(Uint8Array.from(completeResponse)));
-            console.log("Complete response BEFORE extraction using STX-ETX");
-            console.log(
-              new Uint8Array(
-                completeResponse.slice(STXIndex, ETXIndex + 2)
-              ).toString()
-            );
-            console.log(`LRC value = ${completeResponse[ETXIndex + 1]}`);
+  //         completeResponse.push(...valueAsArray);
+  //         // FOREVER, this will add all responses stx-etx to allResponses array
+  //         if (
+  //           completeResponse.includes(this.PAX_CONSTANTS.ETX) &&
+  //           !fullResponseReceived
+  //         ) {
+  //           const ETXIndex = completeResponse.lastIndexOf(
+  //             this.PAX_CONSTANTS.ETX
+  //           );
+  //           const STXIndex = completeResponse.lastIndexOf(
+  //             this.PAX_CONSTANTS.STX
+  //           );
+  //           // console.warn(decoder.decode(Uint8Array.from(completeResponse)));
+  //           console.log("Complete response BEFORE extraction using STX-ETX");
+  //           console.log(
+  //             new Uint8Array(
+  //               completeResponse.slice(STXIndex, ETXIndex + 2)
+  //             ).toString()
+  //           );
+  //           console.log(`LRC value = ${completeResponse[ETXIndex + 1]}`);
 
-            // ToDo: check LRC is correct, if yes then update fullResponseReceived flag and send ack then wait for EOT,
-            //    if not then send NAK and clear the completeResponse variable
+  //           // ToDo: check LRC is correct, if yes then update fullResponseReceived flag and send ack then wait for EOT,
+  //           //    if not then send NAK and clear the completeResponse variable
 
-            // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
-            completeResponse = completeResponse.slice(STXIndex + 3, ETXIndex);
-            console.log(
-              "Complete response length AFTER extraction using STX-ETX"
-            );
-            console.log(completeResponse.length);
-            allResponses.push(
-              decoder.decode(Uint8Array.from(completeResponse))
-            );
-            console.log("\nAll responses:");
-            console.log(allResponses);
-            console.log();
-            await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
-            timeRegisterSentACK = new Date();
-            numberOfACKsRegisterSent++;
-            fullResponseReceived = true; // to be deleted when lrc checking is added
-          }
-        }
-      } catch (error) {
-        console.error("Some exception has been thrown");
-        console.error(error);
-        return { error: error, tryAgain: false };
-      }
-    }
-  };
+  //           // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
+  //           completeResponse = completeResponse.slice(STXIndex + 3, ETXIndex);
+  //           console.log(
+  //             "Complete response length AFTER extraction using STX-ETX"
+  //           );
+  //           console.log(completeResponse.length);
+  //           allResponses.push(
+  //             decoder.decode(Uint8Array.from(completeResponse))
+  //           );
+  //           console.log("\nAll responses:");
+  //           console.log(allResponses);
+  //           console.log();
+  //           await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
+  //           timeRegisterSentACK = new Date();
+  //           numberOfACKsRegisterSent++;
+  //           fullResponseReceived = true; // to be deleted when lrc checking is added
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Some exception has been thrown");
+  //       console.error(error);
+  //       return { error: error, tryAgain: false };
+  //     }
+  //   }
+  // };
 
   //the below one also checks for EOT but send ACK as soon as complete response STX-ETX has been discovered.
   /**
@@ -388,188 +388,188 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
   //   }
   // };
 
-  // read = async () => {
-  //   const reader = this.device.readable.getReader();
-  //   let completeResponse = [];
-  //   const decoder = new TextDecoder();
-  //   const allResponsesExtracted = [];
-  //   let receivedACK = false;
-  //   let receivedNAK = false;
-  //   let fullResponseReceived = false;
-  //   const readingStartTime = new Date();
-  //   let timeRegisterSentACK = undefined;
-  //   let numberOfACKsRegisterSent = 0;
+  read = async () => {
+    const reader = this.device.readable.getReader();
+    let completeResponse = [];
+    const decoder = new TextDecoder();
+    const allResponsesExtracted = [];
+    let receivedACK = false;
+    let receivedNAK = false;
+    let fullResponseReceived = false;
+    const readingStartTime = new Date();
+    let timeRegisterSentACK = undefined;
+    let numberOfACKsRegisterSent = 0;
 
-  //   while (true) {
-  //     try {
-  //       const { value, done } = await reader.read();
-  //       const valueAsArray = Array.from(value);
+    while (true) {
+      try {
+        const { value, done } = await reader.read();
+        const valueAsArray = Array.from(value);
 
-  //       if (done) {
-  //         console.log(this.device);
-  //         console.log(reader);
-  //         await reader.cancel();
-  //         await reader.releaseLock();
-  //         console.error(
-  //           "returning from done condition finish of read function"
-  //         );
-  //         return {
-  //           success: true,
-  //           value: decoder.decode(Uint8Array.from(completeResponse)),
-  //         };
-  //       }
+        if (done) {
+          console.log(this.device);
+          console.log(reader);
+          await reader.cancel();
+          await reader.releaseLock();
+          console.error(
+            "returning from done condition finish of read function"
+          );
+          return {
+            success: true,
+            value: decoder.decode(Uint8Array.from(completeResponse)),
+          };
+        }
 
-  //       if (value) {
-  //         console.log("\nnew value read within read function  --->");
-  //         console.log(decoder.decode(Uint8Array.from(valueAsArray)));
-  //         console.log("\n");
-  //         // this if statement checks for ACK & NAK for 9 seconds
-  //         if (!receivedACK) {
-  //           const timeWithoutACK = new Date() - readingStartTime;
-  //           receivedACK = valueAsArray.includes(this.PAX_CONSTANTS.ACK);
-  //           receivedNAK = valueAsArray.includes(this.PAX_CONSTANTS.NAK);
-  //           console.log(
-  //             `-------------- Time without ACK: ${timeWithoutACK} --------------`
-  //           );
-  //           console.log(
-  //             `-------------- Checking for ACK: ${receivedACK} --------------`
-  //           );
-  //           console.log(
-  //             `-------------- Checking for NAK: ${receivedNAK} --------------`
-  //           );
-  //           // checks if NAK received from terminal then it stops reading and
-  //           // the app should resend the command, then checks if ACK received
-  //           // from terminal so it can proceed with reading
-  //           if (receivedNAK) {
-  //             await reader.releaseLock();
-  //             return {
-  //               error: true,
-  //               tryAgain: true,
-  //               message:
-  //                 "terminal received corrupted command, check command and send again.",
-  //             };
-  //           } else if (!receivedACK && timeWithoutACK > 7000) {
-  //             await reader.releaseLock();
-  //             return {
-  //               error: true,
-  //               tryAgain: true,
-  //               message:
-  //                 "Acknowledge from terminal can not be recieved.\n'Communication issue.'",
-  //             };
-  //           } else if (!receivedACK) {
-  //             continue;
-  //           }
-  //         }
+        if (value) {
+          console.log("\nnew value read within read function  --->");
+          console.log(decoder.decode(Uint8Array.from(valueAsArray)));
+          console.log("\n");
+          // this if statement checks for ACK & NAK for 9 seconds
+          if (!receivedACK) {
+            const timeWithoutACK = new Date() - readingStartTime;
+            receivedACK = valueAsArray.includes(this.PAX_CONSTANTS.ACK);
+            receivedNAK = valueAsArray.includes(this.PAX_CONSTANTS.NAK);
+            console.log(
+              `-------------- Time without ACK: ${timeWithoutACK} --------------`
+            );
+            console.log(
+              `-------------- Checking for ACK: ${receivedACK} --------------`
+            );
+            console.log(
+              `-------------- Checking for NAK: ${receivedNAK} --------------`
+            );
+            // checks if NAK received from terminal then it stops reading and
+            // the app should resend the command, then checks if ACK received
+            // from terminal so it can proceed with reading
+            if (receivedNAK) {
+              await reader.releaseLock();
+              return {
+                error: true,
+                tryAgain: true,
+                message:
+                  "terminal received corrupted command, check command and send again.",
+              };
+            } else if (!receivedACK && timeWithoutACK > 7000) {
+              await reader.releaseLock();
+              return {
+                error: true,
+                tryAgain: true,
+                message:
+                  "Acknowledge from terminal can not be recieved.\n'Communication issue.'",
+              };
+            } else if (!receivedACK) {
+              continue;
+            }
+          }
 
-  //         const EOTIndex = valueAsArray.findIndex(
-  //           (item) => item == this.PAX_CONSTANTS.EOT
-  //         );
-  //         console.log(`-------------- EOT index: ${EOTIndex} --------------`);
+          const EOTIndex = valueAsArray.findIndex(
+            (item) => item == this.PAX_CONSTANTS.EOT
+          );
+          console.log(`-------------- EOT index: ${EOTIndex} --------------`);
 
-  //         if (EOTIndex >= 0) {
-  //           await reader.releaseLock();
-  //           console.log(Uint8Array.from(allResponsesExtracted).toString());
-  //           console.log(decoder.decode(Uint8Array.from(allResponsesExtracted)));
-  //           return {
-  //             success: true,
-  //             value: decoder.decode(Uint8Array.from(allResponsesExtracted)),
-  //           };
-  //         }
+          if (EOTIndex >= 0) {
+            await reader.releaseLock();
+            console.log(Uint8Array.from(allResponsesExtracted).toString());
+            console.log(decoder.decode(Uint8Array.from(allResponsesExtracted)));
+            return {
+              success: true,
+              value: decoder.decode(Uint8Array.from(allResponsesExtracted)),
+            };
+          }
 
-  //         // checks if register sent ack in order to receive EOT, if yes then
-  //         // if it has been for more than 3 seconds and no EOT received then
-  //         // resend ack but if ack has been sent for more than 7 times
-  //         // then there's miscommunication
-  //         if (timeRegisterSentACK) {
-  //           const timeFromLastACKRegisterSent =
-  //             new Date() - timeRegisterSentACK;
-  //           console.log(
-  //             `-------------- timeFromLastACKRegisterSent: ${timeFromLastACKRegisterSent} --------------`
-  //           );
-  //           if (numberOfACKsRegisterSent >= 7) {
-  //             await reader.releaseLock();
-  //             return {
-  //               error: true,
-  //               tryAgain: false,
-  //               messsage:
-  //                 "There's miscommunication, check communication and try again.\n'Didn't receive EOT.'",
-  //             };
-  //           }
-  //           if (timeFromLastACKRegisterSent >= 3000) {
-  //             await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
-  //             timeRegisterSentACK = new Date();
-  //             numberOfACKsRegisterSent++;
-  //           }
-  //           console.log(
-  //             `-------------- numberOfACKsRegisterSent: ${numberOfACKsRegisterSent} --------------`
-  //           );
-  //         }
+          // checks if register sent ack in order to receive EOT, if yes then
+          // if it has been for more than 3 seconds and no EOT received then
+          // resend ack but if ack has been sent for more than 7 times
+          // then there's miscommunication
+          if (timeRegisterSentACK) {
+            const timeFromLastACKRegisterSent =
+              new Date() - timeRegisterSentACK;
+            console.log(
+              `-------------- timeFromLastACKRegisterSent: ${timeFromLastACKRegisterSent} --------------`
+            );
+            if (numberOfACKsRegisterSent >= 7) {
+              await reader.releaseLock();
+              return {
+                error: true,
+                tryAgain: false,
+                messsage:
+                  "There's miscommunication, check communication and try again.\n'Didn't receive EOT.'",
+              };
+            }
+            if (timeFromLastACKRegisterSent >= 3000) {
+              await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
+              timeRegisterSentACK = new Date();
+              numberOfACKsRegisterSent++;
+            }
+            console.log(
+              `-------------- numberOfACKsRegisterSent: ${numberOfACKsRegisterSent} --------------`
+            );
+          }
 
-  //         completeResponse.push(...valueAsArray);
-  //         // FOREVER, this will add all responses to allResponsesExtracted array
-  //         if (
-  //           completeResponse.includes(this.PAX_CONSTANTS.ETX) &&
-  //           !fullResponseReceived
-  //         ) {
-  //           const ETXIndex = valueAsArray.lastIndexOf(this.PAX_CONSTANTS.ETX);
-  //           const STXIndex = completeResponse.lastIndexOf(
-  //             this.PAX_CONSTANTS.STX
-  //           );
-  //           console.log("Complete response BEFORE extraction using STX-ETX");
-  //           console.log(
-  //             new Uint8Array(
-  //               completeResponse.slice(STXIndex, ETXIndex + 2)
-  //             ).toString()
-  //           );
-  //           console.log(`LRC value = ${completeResponse[ETXIndex + 1]}`);
-  //           // ToDo: check LRC is correct, if yes then update fullResponseReceived flag and send ack then wait for EOT,
-  //           //    if not then send NAK and clear the completeResponse variable
-  //           const isCorrupt = this.isResponseCorrupt(
-  //             completeResponse.slice(STXIndex, ETXIndex + 2)
-  //           );
+          completeResponse.push(...valueAsArray);
+          // FOREVER, this will add all responses to allResponsesExtracted array
+          if (
+            completeResponse.includes(this.PAX_CONSTANTS.ETX) &&
+            !fullResponseReceived
+          ) {
+            const ETXIndex = valueAsArray.lastIndexOf(this.PAX_CONSTANTS.ETX);
+            const STXIndex = completeResponse.lastIndexOf(
+              this.PAX_CONSTANTS.STX
+            );
+            console.log("Complete response BEFORE extraction using STX-ETX");
+            console.log(
+              new Uint8Array(
+                completeResponse.slice(STXIndex, ETXIndex + 2)
+              ).toString()
+            );
+            console.log(`LRC value = ${completeResponse[ETXIndex + 1]}`);
+            // ToDo: check LRC is correct, if yes then update fullResponseReceived flag and send ack then wait for EOT,
+            //    if not then send NAK and clear the completeResponse variable
+            const isCorrupt = this.isResponseCorrupt(
+              completeResponse.slice(STXIndex, ETXIndex + 2)
+            );
 
-  //           if (isCorrupt) {
-  //             console.log("corrupt response received");
-  //             completeResponse = [];
-  //             await this.write(new Uint8Array([this.PAX_CONSTANTS.NAK]));
-  //             fullResponseReceived = false;
-  //             continue;
-  //           }
-  //           // [STXIndex + 1] is index of the status that tells there are more
-  //           // responses if its value is 1
-  //           if (completeResponse[STXIndex + 1] == 0x31) {
-  //             allResponsesExtracted.push(
-  //               ...completeResponse.slice(STXIndex + 3, ETXIndex)
-  //             );
-  //             await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
-  //             completeResponse = [];
-  //             continue;
-  //           }
-  //           // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
-  //           completeResponse = completeResponse.slice(STXIndex + 3, ETXIndex);
-  //           console.log(
-  //             "Complete response length AFTER extraction using STX-ETX"
-  //           );
-  //           console.log(completeResponse.length);
-  //           allResponsesExtracted.push(
-  //             ...completeResponse.slice(STXIndex + 3, ETXIndex)
-  //           );
-  //           console.log("\nAll responses:");
-  //           console.log(allResponsesExtracted);
-  //           console.log();
-  //           await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
-  //           timeRegisterSentACK = new Date();
-  //           numberOfACKsRegisterSent++;
-  //           fullResponseReceived = true;
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Some exception has been thrown");
-  //       console.error(error);
-  //       return { error: true, tryAgain: false, message: error };
-  //     }
-  //   }
-  // };
+            if (isCorrupt) {
+              console.log("corrupt response received");
+              completeResponse = [];
+              await this.write(new Uint8Array([this.PAX_CONSTANTS.NAK]));
+              fullResponseReceived = false;
+              continue;
+            }
+            // [STXIndex + 1] is index of the status that tells there are more
+            // responses if its value is 1
+            if (completeResponse[STXIndex + 1] == 0x31) {
+              allResponsesExtracted.push(
+                ...completeResponse.slice(STXIndex + 3, ETXIndex)
+              );
+              await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
+              completeResponse = [];
+              continue;
+            }
+            // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
+            completeResponse = completeResponse.slice(STXIndex + 3, ETXIndex);
+            console.log(
+              "Complete response length AFTER extraction using STX-ETX"
+            );
+            console.log(completeResponse.length);
+            allResponsesExtracted.push(
+              ...completeResponse.slice(STXIndex + 3, ETXIndex)
+            );
+            console.log("\nAll responses:");
+            console.log(allResponsesExtracted);
+            console.log();
+            await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
+            timeRegisterSentACK = new Date();
+            numberOfACKsRegisterSent++;
+            fullResponseReceived = true;
+          }
+        }
+      } catch (error) {
+        console.error("Some exception has been thrown");
+        console.error(error);
+        return { error: true, tryAgain: false, message: error };
+      }
+    }
+  };
 
   /**
    * Checks if the response extracted is complete or corrupted by checking LRC
