@@ -12,7 +12,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       EOT: 0x04,
     };
     this.PROTOCOL_VERSION = new Uint8Array([0x31, 0x2e, 0x34, 0x33]);
-    this.ECR_REFERENCE_NUMBER = 0x01;
+    this.ECR_REFERENCE_NUMBER = 0x31;
     this.paymentGateway = trustCommerceAPIs;
   }
   PAX_CONSTANTS;
@@ -109,6 +109,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
           if (EOTIndex >= 0) {
             await reader.releaseLock();
+            completeResponse = completeResponse.filter(
+              (character) => character !== 0x00
+            );
             console.log(Uint8Array.from(completeResponse).toString());
             console.log(decoder.decode(Uint8Array.from(completeResponse)));
             return {
@@ -814,7 +817,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         response.traceInformation.split(String.fromCharCode(0x1f))
       )
     );
-    const zero = [0x30];
+    const zero = [0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30];
     doCreditFields.requestAmountInformation = [
       ...amount,
       0x1f,
