@@ -109,9 +109,11 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
           if (EOTIndex >= 0) {
             await reader.releaseLock();
+            console.log(completeResponse.includes(0x00));
             completeResponse = completeResponse.filter(
               (character) => character !== 0x00
             );
+            console.log(completeResponse.includes(0x00));
             console.log(Uint8Array.from(completeResponse).toString());
             console.log(decoder.decode(Uint8Array.from(completeResponse)));
             return {
@@ -794,18 +796,11 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1f,
       0x1f,
       0x1f,
-      ...[
-        0x30,
-        0x30,
-        0x30,
-        ...Array.from(
-          this.#convertToUint8Array(
-            response.traceInformation.split(String.fromCharCode(0x1f))[0]
-          )
-        ),
-      ],
-      ,
-      ,
+      ...Array.from(
+        this.#convertToUint8Array(
+          response.traceInformation.split(String.fromCharCode(0x1f))[0]
+        )
+      ),
     ];
     console.log(
       this.#convertToUint8Array(

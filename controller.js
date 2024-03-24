@@ -7,6 +7,11 @@ const connect = async () => {
     const device = await navigator.serial.requestPort({ filters: [] });
     paxInstance.setDeviceUnderUse(device);
     paxInstance.connectDevice();
+    device.addEventListener("disconnect", (event) => {
+      alert(
+        `Device of VID ${device.vendorId} and PID ${device.productId} has been disconnected`
+      );
+    });
   } catch (error) {
     console.log(error);
   }
