@@ -421,7 +421,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
         if (value) {
           console.log("\nnew value read within read function  --->");
-          console.log(Uint8Array.from(valueAsArray));
+          console.log(Uint8Array.from(valueAsArray).toString());
           console.log("\n");
           // this if statement checks for ACK & NAK for 9 seconds
           if (!receivedACK) {
@@ -504,9 +504,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
               `-------------- numberOfACKsRegisterSent: ${numberOfACKsRegisterSent} --------------`
             );
           }
-          const ETXIndex = valueAsArray.lastIndexOf(this.PAX_CONSTANTS.ETX);
 
           completeResponse.push(...valueAsArray);
+          const ETXIndex = completeResponse.lastIndexOf(this.PAX_CONSTANTS.ETX);
           // FOREVER, this will add all responses to allResponsesExtracted array
           if (
             completeResponse.includes(this.PAX_CONSTANTS.ETX) &&
@@ -519,7 +519,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             );
             console.log("Complete response BEFORE extraction using STX-ETX");
             console.log(
-              new Uint8Array(
+              Uint8Array.from(
                 completeResponse.slice(STXIndex, ETXIndex + 2)
               ).toString()
             );
