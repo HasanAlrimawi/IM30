@@ -540,6 +540,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             // [STXIndex + 1] is index of the status that tells there are more
             // responses if its value is 1
             if (completeResponse[STXIndex + 1] == 0x31) {
+              console.error(`STATUS = ${completeResponse[STXIndex + 1]}`);
               allResponsesExtracted.push(
                 ...completeResponse.slice(STXIndex + 3, ETXIndex)
               );
@@ -553,9 +554,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
               "Complete response length AFTER extraction using STX-ETX"
             );
             console.log(completeResponse.length);
-            allResponsesExtracted.push(
-              ...completeResponse.slice(STXIndex + 3, ETXIndex)
-            );
+            allResponsesExtracted.push(...completeResponse);
             console.log("\nAll responses:");
             console.log(allResponsesExtracted);
             console.log();
