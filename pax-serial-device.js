@@ -773,9 +773,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     // For auth type, amount should be zero
     let doCreditFields = {
       saleTransactionType: [0x30, 0x33], // auth transaction
-      requestAmountInformation: [
-        0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-      ],
+      requestAmountInformation: [0x30],
       requestTraceInformation: [this.ECR_REFERENCE_NUMBER],
     };
     let response = await this.doCredit(doCreditFields);
@@ -812,7 +810,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         response.traceInformation.split(String.fromCharCode(0x1f))
       )
     );
-    const zero = [0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30];
+    const zero = [0x30];
     doCreditFields.requestAmountInformation = [
       ...amount,
       0x1f,
