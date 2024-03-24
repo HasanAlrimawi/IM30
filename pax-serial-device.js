@@ -585,12 +585,14 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       Uint8Array.from(response.slice(0, response.length - 1))
     );
     console.log(
-      JSON.stringify(response) === JSON.stringify(responseWithCorrectLRC)
+      Uint8Array.from(response).toString() === responseWithCorrectLRC.toString()
     );
     console.log(responseWithCorrectLRC.toString());
-    console.log(Uint8Array.from(response));
+    console.log(Uint8Array.from(response).toString);
     console.log(response.indexOf(0x1c));
-    if (JSON.stringify(response) === JSON.stringify(responseWithCorrectLRC)) {
+    if (
+      Uint8Array.from(response).toString() === responseWithCorrectLRC.toString()
+    ) {
       if (response.indexOf(0x1c) !== 2) {
         return true;
       }
