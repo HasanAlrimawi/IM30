@@ -421,7 +421,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
         if (value) {
           console.log("\nnew value read within read function  --->");
-          console.log(decoder.decode(Uint8Array.from(valueAsArray)));
+          console.log(Uint8Array.from(valueAsArray));
           console.log("\n");
           // this if statement checks for ACK & NAK for 9 seconds
           if (!receivedACK) {
@@ -504,14 +504,16 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
               `-------------- numberOfACKsRegisterSent: ${numberOfACKsRegisterSent} --------------`
             );
           }
+          const ETXIndex = valueAsArray.lastIndexOf(this.PAX_CONSTANTS.ETX);
 
           completeResponse.push(...valueAsArray);
           // FOREVER, this will add all responses to allResponsesExtracted array
           if (
             completeResponse.includes(this.PAX_CONSTANTS.ETX) &&
-            !fullResponseReceived
+            !fullResponseReceived &&
+            completeResponse.length > ETXIndex + 1
           ) {
-            const ETXIndex = valueAsArray.lastIndexOf(this.PAX_CONSTANTS.ETX);
+            // const ETXIndex = valueAsArray.lastIndexOf(this.PAX_CONSTANTS.ETX);
             const STXIndex = completeResponse.lastIndexOf(
               this.PAX_CONSTANTS.STX
             );
@@ -588,7 +590,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       Uint8Array.from(response).toString() === responseWithCorrectLRC.toString()
     );
     console.log(responseWithCorrectLRC.toString());
-    console.log(Uint8Array.from(response).toString);
+    console.log(Uint8Array.from(response).toString());
     console.log(response.indexOf(0x1c));
     if (
       Uint8Array.from(response).toString() === responseWithCorrectLRC.toString()
