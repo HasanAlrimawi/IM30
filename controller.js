@@ -36,6 +36,8 @@ const pay = async (event) => {
       response.responseCode == "000000" ? "Success" : "failure"
     }\nCommand response message: ${
       response.responseMessage
+    }\nTransaction result: ${
+      response.hostInformation[1]
     }\nCard holder expiry date: ${
       response.accountInformation[2]
     }\nTransaction date: ${transactionTime.date}\nTransaction time: ${

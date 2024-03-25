@@ -703,6 +703,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     if (response?.error) {
       return { error: true, message: response.message, stage: "Post Auth" };
     } else if (response?.responseCode != "000000") {
+      await this.clearBatch();
       return {
         error: true,
         message: response.responseMessage,
@@ -1091,7 +1092,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       this.PAX_CONSTANTS.ETX,
     ]);
     clearBatchCommand = this.#lrcAppender(clearBatchCommand);
-    const response = this.sendCommand(clearBatchCommand);
+    const response = await this.sendCommand(clearBatchCommand);
     // await this.write(clearBatchCommand);
     // const response = await this.read();
     console.log("Clear batch response");
