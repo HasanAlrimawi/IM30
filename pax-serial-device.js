@@ -675,16 +675,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1f,
       ...Array.from(this.#convertToUint8Array(response.traceInformation[0])),
     ];
-    console.log(
-      this.#convertToUint8Array(
-        response.traceInformation.split(String.fromCharCode(0x1f))[0]
-      )
-    );
-    console.log(
-      this.#convertToUint8Array(
-        response.traceInformation.split(String.fromCharCode(0x1f))
-      )
-    );
+    console.log(this.#convertToUint8Array(response.traceInformation[0]));
+    console.log(this.#convertToUint8Array(response.traceInformation));
     const zero = [0x30];
     doCreditFields.requestAmountInformation = [
       ...amount,
