@@ -199,195 +199,34 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
   //   }
   // };
 
-  //the below one also checks for EOT but send ACK as soon as complete response STX-ETX has been discovered.
+  /**
+   * @typedef {Object} ErrorObject
+   * @property {boolean} error Conveys failure
+   * @property {string} message Includes information about error
+   */
+
+  /**
+   * @typedef {Object} PAXResponseCaptureSuccess
+   * @property {boolean} success Conveys the success of the communication
+   *     between ECR - PAX
+   * @property {string} value The response captured from PAX terminal.
+   */
+
+  /**
+   * @typedef {Object} PAXResponseCaptureFailure
+   * @property {boolean} error Conveys failure of the communication between
+   *     ECR - PAX
+   * @property {boolean} tryAgain Conveys the need to try sending the command
+   *     to the PAX terminal again
+   * @property {string} message Includes information about the error cause
+   */
+
   /**
    * Keeps on reading the serial port until there's nothing to read or
    *     end of transaction received, or some fatal error occured.
    *
-   * @returns {ReadingSuccess | FunctionalityFailure}
+   * @returns {PAXResponseCaptureSuccess | PAXResponseCaptureFailure}
    */
-  // read = async () => {
-  //   const reader = this.device.readable.getReader();
-  //   let completeResponse = [];
-  //   const decoder = new TextDecoder();
-  //   const allResponsesExtracted = [];
-  //   let receivedACK = false;
-  //   let receivedNAK = false;
-  //   let fullResponseReceived = false;
-  //   const readingStartTime = new Date();
-  //   let timeRegisterSentACK = undefined;
-  //   let numberOfACKsRegisterSent = 0;
-
-  //   while (true) {
-  //     try {
-  //       const { value, done } = await reader.read();
-  //       const valueAsArray = Array.from(value);
-
-  //       if (done) {
-  //         console.log(this.device);
-  //         console.log(reader);
-  //         await reader.cancel();
-  //         await reader.releaseLock();
-  //         console.error(
-  //           "returning from done condition finish of read function"
-  //         );
-  //         return {
-  //           success: true,
-  //           value: decoder.decode(Uint8Array.from(completeResponse)),
-  //         };
-  //       }
-
-  //       if (value) {
-  //         console.log("\nnew value read within read function  --->");
-  //         console.log(decoder.decode(Uint8Array.from(valueAsArray)));
-  //         console.log("\n");
-  //         // this if statement checks for ACK & NAK for 9 seconds
-  //         if (!receivedACK) {
-  //           const timeWithoutACK = new Date() - readingStartTime;
-  //           receivedACK = valueAsArray.includes(this.PAX_CONSTANTS.ACK);
-  //           receivedNAK = valueAsArray.includes(this.PAX_CONSTANTS.NAK);
-  //           console.log(
-  //             `-------------- Time without ACK: ${timeWithoutACK} --------------`
-  //           );
-  //           console.log(
-  //             `-------------- Checking for ACK: ${receivedACK} --------------`
-  //           );
-  //           console.log(
-  //             `-------------- Checking for NAK: ${receivedNAK} --------------`
-  //           );
-  //           // checks if NAK received from terminal then it stops reading and
-  //           // the app should resend the command, then checks if ACK received
-  //           // from terminal so it can proceed with reading
-  //           if (receivedNAK) {
-  //             await reader.releaseLock();
-  //             return {
-  //               error: true,
-  //               tryAgain: true,
-  //               message:
-  //                 "terminal received corrupted command, check command and send again.",
-  //             };
-  //           } else if (!receivedACK && timeWithoutACK > 7000) {
-  //             await reader.releaseLock();
-  //             return {
-  //               error: true,
-  //               tryAgain: true,
-  //               message:
-  //                 "Acknowledge from terminal can not be recieved.\n'Communication issue.'",
-  //             };
-  //           } else if (!receivedACK) {
-  //             continue;
-  //           }
-  //         }
-
-  //         const EOTIndex = valueAsArray.findIndex(
-  //           (item) => item == this.PAX_CONSTANTS.EOT
-  //         );
-  //         console.log(`-------------- EOT index: ${EOTIndex} --------------`);
-
-  //         if (EOTIndex >= 0) {
-  //           await reader.releaseLock();
-  //           console.log(Uint8Array.from(completeResponse).toString());
-  //           console.log(decoder.decode(Uint8Array.from(completeResponse)));
-  //           return {
-  //             success: true,
-  //             value: decoder.decode(Uint8Array.from(completeResponse)),
-  //           };
-  //         }
-
-  //         // checks if register sent ack, if yes then if it has been for more
-  //         // than 3 seconds and no EOT received then resend ack but if ack has
-  //         // been sent for more than 7 times then there's miscommunication
-  //         if (timeRegisterSentACK) {
-  //           const timeFromLastACKRegisterSent =
-  //             new Date() - timeRegisterSentACK;
-  //           console.log(
-  //             `-------------- timeFromLastACKRegisterSent: ${timeFromLastACKRegisterSent} --------------`
-  //           );
-  //           if (numberOfACKsRegisterSent >= 7) {
-  //             await reader.releaseLock();
-  //             return {
-  //               error: true,
-  //               tryAgain: false,
-  //               messsage:
-  //                 "There's miscommunication, check communication and try again.\n'Didn't receive EOT.'",
-  //             };
-  //           }
-  //           if (timeFromLastACKRegisterSent >= 3000) {
-  //             console.log("it has been more than 3 seconds");
-  //             await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
-  //             timeRegisterSentACK = new Date();
-  //             numberOfACKsRegisterSent++;
-  //           }
-  //           console.log(
-  //             `-------------- numberOfACKsRegisterSent: ${numberOfACKsRegisterSent} --------------`
-  //           );
-  //         }
-
-  //         completeResponse.push(...valueAsArray);
-  //         // FOREVER, this will add all responses stx-etx to allResponsesExtracted array
-  //         if (
-  //           completeResponse.includes(this.PAX_CONSTANTS.ETX) &&
-  //           !fullResponseReceived
-  //         ) {
-  //           const ETXIndex = completeResponse.lastIndexOf(
-  //             this.PAX_CONSTANTS.ETX
-  //           );
-  //           const STXIndex = completeResponse.lastIndexOf(
-  //             this.PAX_CONSTANTS.STX
-  //           );
-  //           // console.warn(decoder.decode(Uint8Array.from(completeResponse)));
-  //           console.log("Complete response BEFORE extraction using STX-ETX");
-  //           console.log(
-  //             new Uint8Array(
-  //               completeResponse.slice(STXIndex, ETXIndex + 2)
-  //             ).toString()
-  //           );
-  //           console.log(`LRC value = ${completeResponse[ETXIndex + 1]}`);
-
-  //           // ToDo: check LRC is correct, if yes then update fullResponseReceived flag and send ack then wait for EOT,
-  //           //    if not then send NAK and clear the completeResponse variable
-  //           // const isCorrupt = this.isResponseCorrupt(
-  //           //   completeResponse.slice(STXIndex, ETXIndex + 2)
-  //           // );
-
-  //           // if (isCorrupt) {
-  //           //   completeResponse = [];
-  //           //   await this.write(new Uint8Array([this.PAX_CONSTANTS.NAK]));
-  //           //   fullResponseReceived = false;
-  //           //   continue;
-  //           // }
-  //           // if (completeResponse[STXIndex + 1] == 0x31) {
-  //           //   allResponsesExtracted.push(
-  //           //     ...completeResponse.slice(STXIndex + 3, ETXIndex)
-  //           //   );
-  //           //   await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
-  //           // }
-  //           // (STXIndex + 3) to exclude unneeded bytes STX, status, separator
-  //           completeResponse = completeResponse.slice(STXIndex + 3, ETXIndex);
-  //           console.log(
-  //             "Complete response length AFTER extraction using STX-ETX"
-  //           );
-  //           console.log(completeResponse.length);
-  //           allResponsesExtracted.push(
-  //             decoder.decode(Uint8Array.from(completeResponse))
-  //           );
-  //           console.log("\nAll responses:");
-  //           console.log(allResponsesExtracted);
-  //           console.log();
-  //           await this.write(new Uint8Array([this.PAX_CONSTANTS.ACK]));
-  //           timeRegisterSentACK = new Date();
-  //           numberOfACKsRegisterSent++;
-  //           fullResponseReceived = true; // to be deleted when lrc checking is added
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Some exception has been thrown");
-  //       console.error(error);
-  //       return { error: true, tryAgain: false, message: error };
-  //     }
-  //   }
-  // };
-
   read = async () => {
     const reader = this.device.readable.getReader();
     let completeResponse = [];
@@ -469,7 +308,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           if (EOTIndex >= 0) {
             await reader.releaseLock();
             console.log(Uint8Array.from(allResponsesExtracted).toString());
-            console.log(decoder.decode(Uint8Array.from(allResponsesExtracted)));
             return {
               success: true,
               value: decoder.decode(Uint8Array.from(allResponsesExtracted)),
@@ -540,6 +378,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
             // [STXIndex + 1] is index of the status that tells there are more
             // responses if its value is 1
             if (completeResponse[STXIndex + 1] == 0x31) {
+              console.log("Received response in multiple packets");
               console.error(`STATUS = ${completeResponse[STXIndex + 1]}`);
               allResponsesExtracted.push(
                 ...completeResponse.slice(STXIndex + 3, ETXIndex)
@@ -578,19 +417,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
    *
    * @param {string[]} response Represents the response captured by read
    *     function, where the response includes STX, ETX, LRC bytes
-   * @returns {boolean} Indicates whether the response is correct
-   *     or wrong/corrupted
+   * @returns {boolean} Indicates if the response is corrupt
    */
   isResponseCorrupt = (response) => {
     const responseWithCorrectLRC = this.#lrcAppender(
       Uint8Array.from(response.slice(0, response.length - 1))
     );
-    console.log(
-      Uint8Array.from(response).toString() === responseWithCorrectLRC.toString()
-    );
-    console.log(responseWithCorrectLRC.toString());
-    console.log(Uint8Array.from(response).toString());
-    console.log(response.indexOf(0x1c));
+
     if (
       Uint8Array.from(response).toString() === responseWithCorrectLRC.toString()
     ) {
@@ -631,7 +464,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
    * @param {Uint8Array} command Represents the command to be sent for the PAX
    *     device, it's expected to contain the STX and ETX bytes
    *
-   * @returns {Uint8Array} The command with the LRC byte appended to it
+   * @returns {Uint8Array} The same passed command with the LRC byte appended
+   *     to it
    */
   #lrcAppender = (command) => {
     const lrc = command
@@ -643,30 +477,56 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
 
   /**
    * Responsible for sending the passed command to the PAX device and checks
-   *     for the response to resend the command if needed, and at last returns
-   *     the final response.
+   *     for the response to resend the command if needed up to three times,
+   *     and at last returns the final response.
    *
    * @param {Uint8Array} command Represents the command to send for PAX device
-   * @returns { | }
+   * @returns {PAXResponseCaptureSuccess | ErrorObject}
    */
   sendCommand = async (command) => {
     const counter = 0;
     let response = undefined;
     while (counter < 3) {
       await this.write(command);
-      const response = this.read();
+      response = this.read();
 
       if (!response.tryAgain) {
         return response;
       }
       counter++;
     }
-    return response;
+    return {
+      error: true,
+      message: response.message,
+    };
   };
+
+  /**
+   * @typedef {Object} InitializeResponse
+   * @property {boolean} success Conveys that the command executed and response
+   *     retrieved successfully.
+   * @property {string} command
+   * @property {string} version
+   * @property {string} responseCode
+   * @property {string} responseMessage
+   * @property {String} SN Represents the serial number of the device
+   * @property {String} modelName
+   * @property {string} OSVersion
+   * @property {string} MACAdress
+   * @property {string} numberOfLinesPerScreen
+   * @property {string} numberOfCharsPerLine
+   * @property {string[]} additionalInformation
+   * @property {string} touchScreen
+   * @property {string} HWConfigBitmap
+   * @property {string} appActivated
+   * @property {string} licenseExpiry
+   */
 
   /**
    * Used to direct the PAX terminal into making internal test/check and
    *     initialize the terminal for transactions.
+   *
+   * @returns {InitializeResponse | ErrorObject}
    */
   initialize = async () => {
     let commandArray = new Uint8Array([
@@ -715,7 +575,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         MACAdress,
         numberOfLinesPerScreen,
         numberOfCharsPerLine,
-        additionalInformation,
+        additionalInformation: additionalInformation?.split(
+          String.fromCharCode(0x1f)
+        ),
         touchScreen,
         HWConfigBitmap,
         appActivated,
@@ -772,6 +634,11 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     }
   };
 
+  /**
+   *
+   * @param {number} amount
+   * @returns {DoCreditResponse | ErrorObject}
+   */
   pay = async (amount) => {
     // [1c] means <FS> which is the separator of request/response fields
     // [1f] means <US> which is the separator of the request amount information
@@ -789,10 +656,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     console.log(response);
 
     if (response?.error) {
-      return { error: response.message, stage: "Auth" };
+      await this.clearBatch();
+      return { error: true, message: response.message, stage: "Auth" };
     } else if (response?.responseCode != "000000") {
+      await this.clearBatch();
       return {
-        error: response.responseMessage,
+        error: true,
+        message: response.responseMessage,
         stage: "Auth",
       };
     }
@@ -803,11 +673,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1f,
       0x1f,
       0x1f,
-      ...Array.from(
-        this.#convertToUint8Array(
-          response.traceInformation.split(String.fromCharCode(0x1f))[0]
-        )
-      ),
+      ...Array.from(this.#convertToUint8Array(response.traceInformation[0])),
     ];
     console.log(
       this.#convertToUint8Array(
@@ -844,26 +710,72 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       return { error: true, message: response.message, stage: "Post Auth" };
     } else if (response?.responseCode != "000000") {
       return {
-        error: response.responseMessage,
+        error: true,
+        message: response.responseMessage,
         stage: "Post Auth",
       };
     }
     return {
-      success: response.responseMessage,
+      success: true,
+      command: response.command,
       responseCode: response.responseCode,
       responseMessage: response.responseMessage,
-      traceInformation: response.traceInformation.split(
-        String.fromCharCode(0x1f)
-      ),
-      accountInformation: response.accountInformation.split(
-        String.fromCharCode(0x1f)
-      ),
-      amountInformation: response.amountInformation.split(
-        String.fromCharCode(0x1f)
-      ),
+      hostInformation: response.hostInformation,
+      transactionType: response.transactionType,
+      amountInformation: response.amountInformation,
+      accountInformation: response.accountInformation,
+      traceInformation: response.traceInformation,
+      AVSInformation: response.AVSInformation,
+      commercialInfomration: response.commercialInfomration,
+      eCommerce: response.eCommerce,
+      additionalInformation: response.additionalInformation,
+      VASInfromation: response.VASInfromation,
+      TORInformation: response.TORInformation,
+      payloadData: response.payloadData,
+      hostCredentialInformation: response.hostCredentialInformation,
     };
   };
 
+  /**
+   * @typedef {Object} DoCreditResponse
+   * @property {boolean} success Conveys that the command executed and response
+   *     retrieved successfully.
+   * @property {string} responseCode
+   * @property {string} responseMessage
+   * @property {string[] | undefined} accountInformation
+   * @property {string[] | undefined} amountInformation
+   * @property {string} transactionType
+   * @property {string[] | undefined} hostInformation
+   * @property {string[] | undefined} traceInformation
+   * @property {string[] | undefined} AVSInformation
+   * @property {string[] | undefined} commercialInfomration
+   * @property {string[] | undefined} eCommerce
+   * @property {string[] | undefined} additionalInformation
+   * @property {string[] | undefined} VASInfromation
+   * @property {string[] | undefined} TORInformation
+   * @property {string | undefined} payloadData
+   * @property {string | undefined} hostCredentialInformation
+   */
+
+  /**
+   * @typedef {Object} DoCreditRequestOptions
+   * @property {number[]} saleTransactionType
+   * @property {number[] | undefined} requestAmountInformation
+   * @property {number[] | undefined} requestAccountInformation
+   * @property {number[] | undefined} requestTraceInformation
+   * @property {number[] | undefined} requestAVSInformation
+   * @property {number[] | undefined} requestCashierInformation
+   * @property {number[] | undefined} requestCommercialInformation
+   * @property {number[] | undefined} requestMOTOInformation
+   * @property {number[] | undefined} requestAdditionalInformation
+   */
+
+  /**
+   * Executes the doCredit command based on the options passed to it.
+   *
+   * @param {DoCreditRequestOptions} doCreditRequestOptions
+   * @returns {DoCreditResponse | ErrorObject}
+   */
   doCredit = async (doCreditRequestOptions) => {
     const doCreditCommand = [0x54, 0x30, 0x30]; // T00
     const doCreditRequestArray = [
@@ -951,17 +863,23 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
         command,
         responseCode,
         responseMessage,
-        accountInformation,
-        amountInformation,
+        accountInformation: accountInformation?.split(
+          String.fromCharCode(0x1f)
+        ),
+        amountInformation: amountInformation?.split(String.fromCharCode(0x1f)),
         transactionType,
-        hostInformation,
-        traceInformation,
-        AVSInformation,
-        commercialInfomration,
-        eCommerce,
-        additionalInformation,
-        VASInfromation,
-        TORInformation,
+        hostInformation: hostInformation?.split(String.fromCharCode(0x1f)),
+        traceInformation: traceInformation?.split(String.fromCharCode(0x1f)),
+        AVSInformation: AVSInformation?.split(String.fromCharCode(0x1f)),
+        commercialInfomration: commercialInfomration?.split(
+          String.fromCharCode(0x1f)
+        ),
+        eCommerce: eCommerce?.split(String.fromCharCode(0x1f)),
+        additionalInformation: additionalInformation?.split(
+          String.fromCharCode(0x1f)
+        ),
+        VASInfromation: VASInfromation?.split(String.fromCharCode(0x1f)),
+        TORInformation: TORInformation.split(String.fromCharCode(0x1f)),
         payloadData,
         hostCredentialInformation,
       };
@@ -1047,6 +965,8 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
    *
    * @param {{title: string, body: string}} message Represents the message
    *     to be shown on the PAX device
+   *
+   * @returns {CommandShallowResponse | ErrorObject}
    */
   showMessage = async (message) => {
     const messageBody = this.#convertToUint8Array(message.body);
@@ -1099,7 +1019,20 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     }
   };
 
-  // TODO address it
+  /**
+   * @typedef {Object} CommandShallowResponse
+   * @property {boolean} success Conveys that the command executed and response
+   *     retrieved successfully.
+   * @property {string} command
+   * @property {string} responseCode
+   * @property {string} responseMessage
+   */
+
+  /**
+   * Clears the message appearing on the teminal.
+   *
+   * @returns {CommandShallowResponse | ErrorObject}
+   */
   clearMessage = async () => {
     // const clearMessageCommand = `${this.PAX_CONSTANTS.STX}A12[1c]${this.PROTOCOL_VERSION}${this.PAX_CONSTANTS.ETX}K`;
     let clearMessageCommand = new Uint8Array([
@@ -1133,6 +1066,22 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     }
   };
 
+  /**
+   * @typedef {Object} ClearBatchResponse
+   * @property {boolean} success Conveys that the command executed and response
+   *     retrieved successfully.
+   * @property {string} command
+   * @property {string} responseCode
+   * @property {string} responseMessage
+   * @property {string[] | undefined} additionalInformation
+   * @property {string[] | undefined} TORInformation
+   */
+
+  /**
+   * Clears terminal batch to allow another auth transaction.
+   *
+   * @returns {ClearBatchResponse | ErrorObject}
+   */
   clearBatch = async () => {
     let clearBatchCommand = new Uint8Array([
       this.PAX_CONSTANTS.STX,
@@ -1162,10 +1111,13 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       console.log("CLEAR BATCH: I'm returning success");
       return {
         success: true,
+        command,
         responseCode: responseCode,
         responseMessage: responseMessage,
-        additionalInformation,
-        TORInformation,
+        additionalInformation: additionalInformation?.split(
+          String.fromCharCode(0x1f)
+        ),
+        TORInformation: TORInformation?.split(String.fromCharCode(0x1f)),
       };
     } else if (response?.error) {
       return {

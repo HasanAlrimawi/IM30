@@ -42,7 +42,7 @@ const pay = async (event) => {
       transactionTime.time
     }\nTransaction amount: ${parseInt(response.amountInformation[0]) / 100}$`;
   } else {
-    responseStatusUIHolder.textContent = `Payment status: Failure\nFailure stage: ${response.stage}\nError: ${response.error}`;
+    responseStatusUIHolder.textContent = `Payment status: Failure\nFailure stage: ${response.stage}\nError: ${response.message}`;
   }
 };
 
@@ -72,7 +72,7 @@ const initialize = async () => {
       response.responseCode == "000000" ? "Success" : "failure"
     }\nCommand response message: ${response.responseMessage}`;
   } else {
-    responseStatusUIHolder.textContent = `Initialization status: Failure\nError: ${response.error}`;
+    responseStatusUIHolder.textContent = `Initialization status: Failure\nError: ${response.message}`;
   }
 };
 
@@ -90,7 +90,7 @@ const showMessage = async () => {
       response.responseCode == "000000" ? "Success" : "failure"
     }\nCommand response message: ${response.responseMessage}`;
   } else {
-    responseStatusUIHolder.textContent = `Show message status: Failure\nError: ${response.error}`;
+    responseStatusUIHolder.textContent = `Show message status: Failure\nError: ${response.message}`;
   }
 };
 
@@ -109,7 +109,7 @@ const clearBatch = async () => {
       response.responseCode == "000000" ? "Success" : "failure"
     }\nCommand response message: ${response.responseMessage}`;
   } else {
-    responseStatusUIHolder.textContent = `Clear batch status: Failure\nError: ${response.error}`;
+    responseStatusUIHolder.textContent = `Clear batch status: Failure\nError: ${response.message}`;
   }
 };
 

@@ -9,23 +9,34 @@ export class BaseDeviceSerialDriver {
   load() {}
   pay() {}
 
+  /**
+   * Sets the serial port selected by the user, to enable adding event
+   *     listeners or get readers or writers for the serial port.
+   *
+   * @param {SerialPort} device The serial port selected by user
+   */
   setDeviceUnderUse = (device) => {
     this.device = device;
   };
 
+  /**
+   * Returns serial port under use.
+   *
+   * @returns {SerialPort}
+   */
   getDeviceUnderUse = () => {
     return this.device;
   };
 
   /**
    * @typedef {Object} FunctionalitySuccess
-   * @property {string} success Success message conveys the success of the
-   *     functionality
+   * @property {boolean} success Conveys the success of the functionality
    */
 
   /**
-   * @typedef {Object} FunctionalityFailure
-   * @property {string} error Error message that conveys failure
+   * @typedef {Object} ErrorObject
+   * @property {boolean} error Conveys failure
+   * @property {string} message Includes information about error
    */
 
   /**
@@ -38,18 +49,19 @@ export class BaseDeviceSerialDriver {
   /**
    * Opens/connects the serial port selected.
    *
-   * @returns {FunctionalitySuccess | FunctionalityFailure}
+   * @returns {FunctionalitySuccess | ErrorObject}
    */
   connectDevice = async () => {
     try {
       await this.device.open({ baudRate: this.baudRate });
       return {
-        success: `Device was opened successfully`,
+        success: true,
       };
     } catch (error) {
       console.log(error);
       return {
-        error: `Couldn't open device ${error}`,
+        error: true,
+        message: `Couldn't open device ${error}`,
       };
     }
   };
@@ -58,10 +70,9 @@ export class BaseDeviceSerialDriver {
    * Keeps on reading the serial port until there's nothing to read, or some
    *     fatal error occured.
    *
-   * @returns {ReadingSuccess | FunctionalityFailure}
+   * @returns {ReadingSuccess | ErrorObject}
    */
   read = async () => {
-    console.error("I shouldn't be called");
     const reader = this.device.readable.getReader();
     let completeResponse = [];
     while (true) {
@@ -70,7 +81,7 @@ export class BaseDeviceSerialDriver {
         const arrayValue = Array.from(value);
         if (done) {
           reader.releaseLock();
-          console.error("finished reading");
+          console.log("finished reading");
           return {
             success: "Success at reading",
             value: Uint8Array(completeResponse),
@@ -81,11 +92,18 @@ export class BaseDeviceSerialDriver {
         }
       } catch (error) {
         console.error("Error while listening");
-        return { error: error };
+        return { error: true, message: error };
       }
     }
   };
 
+  /**
+   * Sends/writes the data or command passed through to the connected serial
+   *     port.
+   *
+   * @param {Uint8Array} data Represents the data that sould be sent to the
+   *     serial port connected
+   */
   write = async (data) => {
     // TODO: Wrap with tryCatch
     try {
@@ -93,7 +111,6 @@ export class BaseDeviceSerialDriver {
       console.log("started sending to terminal");
       await writer.write(data);
       console.log("finished sending to terminal");
-      // await writer.cancel();
       await writer.releaseLock();
     } catch (error) {
       console.error(error);
