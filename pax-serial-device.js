@@ -539,8 +539,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       this.PAX_CONSTANTS.ETX,
     ]);
     commandArray = this.#lrcAppender(commandArray);
-    await this.write(commandArray);
-    const response = await this.read();
+    const response = await this.sendCommand(commandArray);
+    // await this.write(commandArray);
+    // const response = await this.read();
     // console.log(response);
 
     if (response?.success) {
@@ -612,8 +613,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       this.PAX_CONSTANTS.ETX,
     ]);
     getSignatureCommand = this.#lrcAppender(getSignatureCommand);
-    await this.write(getSignatureCommand);
-    const response = await this.read();
+    const response = await this.sendCommand(getSignatureCommand);
+    // await this.write(getSignatureCommand);
+    // const response = await this.read();
     if (response?.success) {
       const [
         command,
@@ -987,8 +989,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       this.PAX_CONSTANTS.ETX,
     ]);
     showMessageCommand = this.#lrcAppender(showMessageCommand);
-    await this.write(showMessageCommand);
-    const response = await this.read();
+    const response = await this.sendCommand(showMessageCommand);
+    // await this.write(showMessageCommand);
+    // const response = await this.read();
     console.log(`Show message response: `);
     console.log(response);
     if (response?.success) {
@@ -1038,8 +1041,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       this.PAX_CONSTANTS.ETX,
     ]);
     clearMessageCommand = this.#lrcAppender(clearMessageCommand);
-    await this.write(clearMessageCommand);
-    const response = await this.read();
+    const response = await this.sendCommand(clearMessageCommand);
+    // await this.write(clearMessageCommand);
+    // const response = await this.read();
     if (response?.success) {
       const [command, version, responseCode, responseMessage] =
         response.value.split("[1c]");
@@ -1087,8 +1091,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       this.PAX_CONSTANTS.ETX,
     ]);
     clearBatchCommand = this.#lrcAppender(clearBatchCommand);
-    await this.write(clearBatchCommand);
-    const response = await this.read();
+    const response = this.sendCommand(clearBatchCommand);
+    // await this.write(clearBatchCommand);
+    // const response = await this.read();
     console.log("Clear batch response");
     console.log(response);
 
