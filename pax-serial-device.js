@@ -677,8 +677,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1f,
       ...Array.from(this.#convertToUint8Array(response.traceInformation[0])),
     ];
-    console.log(this.#convertToUint8Array(response.traceInformation[0]));
-    console.log(this.#convertToUint8Array(response.traceInformation));
     const zero = [0x30];
     doCreditFields.requestAmountInformation = [
       ...amount,
@@ -689,14 +687,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       0x1f,
       ...zero,
     ];
-    // function delay(ms) {
-    //   return new Promise((resolve) => {
-    //     setTimeout(resolve, ms);
-    //   });
-    // }
-    // console.log("Before delay");
-    // await delay(10000);
-    // console.log("After delay");
     response = await this.doCredit(doCreditFields);
     console.log(response);
 
@@ -704,11 +694,6 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
       return { error: true, message: response.message, stage: "Post Auth" };
     } else if (response?.responseCode != "000000") {
       await this.clearBatch();
-      return {
-        error: true,
-        message: response.responseMessage,
-        stage: "Post Auth",
-      };
     }
     return {
       success: true,

@@ -36,15 +36,13 @@ const pay = async (event) => {
       response.responseCode == "000000" ? "Success" : "failure"
     }\nCommand response message: ${
       response.responseMessage
-    }\nTransaction result: ${
-      response.hostInformation[1]
-    }\nCard holder expiry date: ${
-      response.accountInformation[2]
-    }\nTransaction date: ${transactionTime.date}\nTransaction time: ${
-      transactionTime.time
-    }\nTransaction amount: ${parseInt(response.amountInformation[0]) / 100}$`;
+    }\nTransaction result: ${response.hostInformation[1]}\nTransaction date: ${
+      transactionTime.date
+    }\nTransaction time: ${transactionTime.time}\nTransaction amount: ${
+      parseInt(response.amountInformation[0]) / 100
+    }$`;
   } else {
-    responseStatusUIHolder.textContent = `Payment status: Failure\nFailure stage: ${response.stage}\nTransaction result: ${response.hostInformation[1]}\nError: ${response.message}`;
+    responseStatusUIHolder.textContent = `Payment status: Failure\nFailure stage: ${response.stage}\nError: ${response.message}`;
   }
 };
 
