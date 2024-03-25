@@ -488,7 +488,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     let response = undefined;
     while (counter < 3) {
       await this.write(command);
-      response = this.read();
+      response = await this.read();
 
       if (!response.tryAgain) {
         return response;
@@ -827,8 +827,9 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
     );
     doCreditRequest = this.#lrcAppender(doCreditRequest);
     console.log(doCreditRequest);
-    await this.write(doCreditRequest);
-    const response = await this.read();
+    const response = await this.sendCommand(doCreditRequest);
+    // await this.write(doCreditRequest);
+    // const response = await this.read();
 
     if (response.success) {
       const [
@@ -879,7 +880,7 @@ export class PaxSerialDriver extends BaseDeviceSerialDriver {
           String.fromCharCode(0x1f)
         ),
         VASInfromation: VASInfromation?.split(String.fromCharCode(0x1f)),
-        TORInformation: TORInformation.split(String.fromCharCode(0x1f)),
+        TORInformation: TORInformation?.split(String.fromCharCode(0x1f)),
         payloadData,
         hostCredentialInformation,
       };
